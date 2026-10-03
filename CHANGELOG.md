@@ -1,5 +1,10 @@
 # Journal des modifications
 
+## 1.4.8 — 2026-10-03
+- Publication GitHub : noms de personnes et organismes personnels retirés des règles par défaut (le paramétrage existant est conservé)
+- Virements internes : le nom du titulaire est lu dans l’en-tête des relevés au lieu d’être codé en dur
+- Build MSI : les fichiers temporaires de makecab ne polluent plus la racine du projet
+
 ## 1.4.7 — 2026-10-03
 - Ollama : l’erreur 404 venait d’un modèle non installé — message explicite (modèles installés, commande de téléchargement) à la place du code 404
 - Paramètres IA : détection d’Ollama / LM Studio, liste des modèles installés, téléchargement d’un modèle avec progression, alerte si le modèle configuré est absent
