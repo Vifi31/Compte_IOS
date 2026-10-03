@@ -1,0 +1,12 @@
+node_modules/
+data/
+Documents/
+Sauvegardes/
+Rapports/
+Versions/
+build/
+dist/
+.env
+setup.inf
+setup.rpt
+MANIFEST.json

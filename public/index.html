@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comptes</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💶</text></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">💶</span><div><b>Comptes</b><small>Gestion des dépenses</small></div></div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <button id="addBtn" class="ghost" onclick="pickFiles()">📥 Ajouter un relevé</button>
+      <button id="themeBtn" class="ghost" title="Changer de thème">🌓 Thème</button>
+      <small id="importInfo"></small>
+    </div>
+  </aside>
+  <main>
+    <header class="topbar">
+      <h1 id="pageTitle"></h1>
+      <div class="filters" id="filters"></div>
+    </header>
+    <section id="view"></section>
+  </main>
+</div>
+<div id="modalRoot"></div>
+<div id="toasts"></div>
+<script src="/vendor/chart.js"></script>
+<script src="/menus.js"></script>
+<script src="/exports.js"></script>
+<script src="/manifest.js"></script>
+<script src="/model.js"></script>
+<script src="/analysis.js"></script>
+<script src="/prompts.js"></script>
+<script src="/license.js"></script>
+<script src="/forecast.js"></script>
+<script src="/compare.js"></script>
+<script src="/backups.js"></script>
+<script src="/versions.js"></script>
+<script src="/statements.js"></script>
+<script src="/reports.js"></script>
+<script src="/docs.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
