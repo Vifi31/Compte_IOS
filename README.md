@@ -21,12 +21,13 @@ Application locale de gestion des dépenses, alimentée par les relevés PDF *La
 - **Relevés** : affichage par année, frise de couverture des mois, ouverture/téléchargement/suppression des PDF.
 - **Versions** (avec le prompt utilisé pour chaque version) : numéro de version, publication (mineur +0.0.1 / intermédiaire +0.1.0 / majeur +1.0.0), changement d’importance avec renumérotation, journal `CHANGELOG.md`, instantanés dans `Versions/`, comparaison et retour arrière.
 - **Menus** : groupes « Gestion Données » (Catégories, Comptes, Relevés) et « Administration » (Sauvegardes, Versions, Affichage des menus) ; libellés, icônes, déplacement des entrées d'un menu à l'autre, création de menus, affichage et ordre personnalisables.
-- **Analyse IA** : analyse des dépenses et revenus sur une période (Anthropic, compatible OpenAI, offres gratuites — Gemini, Groq, OpenRouter, Mistral, Cerebras, GitHub Models, Hugging Face, Ollama, LM Studio — ou analyse locale sans IA), aperçu et consentement avant envoi, historique, export PDF.
+- **Analyse IA** : analyse des dépenses et revenus sur une période ou **pluriannuelle** (toutes les années présentes) (Anthropic, compatible OpenAI, offres gratuites — Gemini, Groq, OpenRouter, Mistral, Cerebras, GitHub Models, Hugging Face, Ollama, LM Studio — ou analyse locale sans IA), aperçu et consentement avant envoi, historique, export PDF.
 - **Prompt** : journal de tous les prompts (demandes et envois IA), modifiable ; modèles de prompt d'analyse.
 - **Licence** : copyright, licence de diffusion, licence d'utilisation à accepter, composants tiers.
 - **Manifeste** : identité du programme, empreintes SHA-256 des fichiers, vérification d'intégrité (`MANIFEST.json`).
 - **Modèle** : export/import d'un paramétrage réutilisable sans données personnelles.
 - **Exports PDF** (boutons rouge/orange) des pages Prompt, Versions, Documentation (avec table des matières cliquable et pagination), Licence et Manifeste.
+- **Immobilier (VEFA)** : récapitulatif du projet, page Paramètres (toutes les saisies : appels de fonds, épargne, prêts, prêt relais, fonds supplémentaires), planning avec fonds disponibles à chaque appel et déblocages du relais, simulation « et si », suivi réel/prévu, plan d'actions, dossier PDF.
 - **Documentation** : mode d'emploi intégré, structuré comme la barre latérale (chapitres = menus, sections = entrées, ordre et libellés actuels), PDF avec table des matières à deux niveaux.
 - **Comptes** : ajout de comptes manuels (autre banque, espèces, carte) avec saisie d’opérations ; soldes et courbe d'évolution de chaque compte (courants et épargne).
 

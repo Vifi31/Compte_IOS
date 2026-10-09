@@ -4,7 +4,8 @@ const NAV_GROUPS = [
   { id: 'main', label: '', items: [['dashboard', '📊', 'Tableau de bord'], ['operations', '🧾', 'Opérations'], ['stats', '📈', 'Statistiques'], ['compare', '⚖️', 'Comparer'], ['forecast', '🔮', 'Prévisions'], ['reports', '📄', 'Rapports PDF']] },
   { id: 'analyse', label: 'Analyse', icon: '🧠', items: [['analyse', '🧠', 'Analyse IA'], ['ai', '🔌', 'Paramètres IA']] },
   { id: 'data', label: 'Gestion Données', icon: '🗂️', items: [['categories', '🏷️', 'Catégories'], ['accounts', '🏦', 'Comptes'], ['statements', '🗃️', 'Relevés']] },
-  { id: 'admin', label: 'Administration', icon: '⚙️', items: [['backups', '💾', 'Sauvegardes'], ['versions', '🏷️', 'Versions'], ['prompts', '📜', 'Prompt'], ['license', '©️', 'Licence'], ['manifest', '📋', 'Manifeste'], ['model', '🧬', 'Modèle'], ['menus', '🎛️', 'Affichage des menus', true]] },
+  { id: 'immo', label: 'Immobilier', icon: '🏗️', items: [['immo', '🏗️', 'Projet VEFA'], ['immo-params', '⚙️', 'Paramètres'], ['immo-planning', '🗓️', 'Planning et simulation'], ['immo-suivi', '📈', 'Suivi'], ['immo-actions', '✅', 'Plan d’actions'], ['immo-ai', '🧠', 'Analyse IA']] },
+  { id: 'admin', label: 'Administration', icon: '⚙️', items: [['backups', '💾', 'Sauvegardes'], ['versions', '🏷️', 'Versions'], ['prompts', '📜', 'Prompt'], ['license', '©️', 'Licence'], ['manifest', '📋', 'Manifeste'], ['model', '🧬', 'Modèle'], ['techdocs', '🛠️', 'Documentation technique'], ['menus', '🎛️', 'Affichage des menus', true]] },
   { id: 'help', label: '', items: [['docs', '📘', 'Documentation']] },
 ];
 const menuCfg = () => ({ hidden: [], order: {}, groupOrder: [], labels: {}, icons: {}, moves: {}, customGroups: [], ...(S.data?.menu ?? {}) });
@@ -20,7 +21,10 @@ function navModel(cfg = menuCfg()) {
     tgt.items.push({ id: it[0], icon: cfg.icons[it[0]] ?? it[1], label: cfg.labels[it[0]] ?? it[2], locked: !!it[3], defLabel: it[2], defIcon: it[1], home: g.id, idx: i });
   });
   for (const g of groups) { g.items.sort((a, b) => rank(cfg.order[g.id], a.id) - rank(cfg.order[g.id], b.id) || (a.home === g.id ? 0 : 1) - (b.home === g.id ? 0 : 1) || a.idx - b.idx); g.locked = g.items.some(i => i.locked); }
-  groups.sort((a, b) => rank(cfg.groupOrder, a.id) - rank(cfg.groupOrder, b.id) || a.idx - b.idx);
+  // ordre : celui de l'utilisateur ; un groupe nouveau (absent de sa liste) se place après son prédécesseur par défaut
+  const defIds = groups.map(g => g.id), order = cfg.groupOrder.filter(id => byId.has(id));
+  for (const id of defIds) if (!order.includes(id)) { let pos = -1; for (let i = defIds.indexOf(id) - 1; i >= 0; i--) { const p = order.indexOf(defIds[i]); if (p >= 0) { pos = p; break; } } order.splice(pos + 1, 0, id); }
+  groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   return groups;
 }
 const itemHidden = (it, cfg) => !it.locked && cfg.hidden.includes(it.id);

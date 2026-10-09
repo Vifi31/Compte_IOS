@@ -7,7 +7,7 @@ function h(tag, attrs, ...kids) {
   for (const [k, v] of Object.entries(attrs || {})) {
     if (v == null || v === false) continue;
     if (k === 'class') el.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') { for (const [p, x] of Object.entries(v)) { if (x == null) continue; if (p.startsWith('--')) el.style.setProperty(p, x); else el.style[p] = x; } }
     else if (k === 'html') el.innerHTML = v;
     else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
     else if (k === 'value' || k === 'checked') late[k] = v;
@@ -143,7 +143,7 @@ function catSelect(value, onchange, { kinds, none } = {}) {
 // ============ Filtres globaux ============
 function renderFilters() {
   const f = $('#filters'); f.innerHTML = '';
-  if (['docs', 'backups', 'menus', 'versions', 'prompts', 'license', 'ai', 'analyse', 'manifest', 'model'].includes(S.page)) return;
+  if (['docs', 'backups', 'menus', 'versions', 'prompts', 'license', 'ai', 'analyse', 'manifest', 'model', 'immo', 'immo-params', 'immo-planning', 'immo-suivi', 'immo-actions', 'immo-ai', 'techdocs'].includes(S.page)) return;
   const accSel = h('select', { onchange: e => { S.scope = e.target.value; localStorage.setItem('scope', S.scope); S.of.sel.clear(); render(); } },
     h('option', { value: 'courants' }, '💳 Comptes courants'), h('option', { value: 'tous' }, '🏦 Tous les comptes'),
     S.data.accounts.map(a => h('option', { value: a.number }, `${accIcon(a.type)} ${accName(a)}`)));
@@ -505,7 +505,7 @@ function renameAccount(a) {
 }
 
 // ============ Routage ============
-const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
+const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, immo: pageImmo, 'immo-params': pageImmoParams, 'immo-planning': pagePlanning, 'immo-suivi': pageSuivi, 'immo-actions': pageActions, 'immo-ai': pageImmoAI, techdocs: pageTechDocs, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
 function render() {
   const fk = document.activeElement?.dataset?.fk;
   charts.splice(0).forEach(c => c.destroy());
