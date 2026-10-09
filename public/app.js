@@ -65,6 +65,7 @@ function periodRange() {
   if (p === 'm6') return [back(6), last];
   if (p === 'm12') return [back(12), last];
   if (p === 'y') return [last.slice(0, 4) + '-01', last];
+  if (/^y:\d{4}$/.test(p)) { const inY = ms.filter(m => m.startsWith(p.slice(2))); if (inY.length) return [inY[0], inY[inY.length - 1]]; return [ms[0], last]; }
   return [p, p];
 }
 function monthsIn([a, b]) { return allMonths().filter(m => m >= a && m <= b); }
@@ -148,11 +149,13 @@ function renderFilters() {
     h('option', { value: 'courants' }, '💳 Comptes courants'), h('option', { value: 'tous' }, '🏦 Tous les comptes'),
     S.data.accounts.map(a => h('option', { value: a.number }, `${accIcon(a.type)} ${accName(a)}`)));
   accSel.value = S.scope;
-  const ms = allMonths();
+  const ms = allMonths(), years = [...new Set(ms.map(m => m.slice(0, 4)))].reverse();
+  // « Année 2025 » ; pour une année incomplète on indique les mois couverts
+  const yearLabel = y => { const n = ms.filter(m => m.startsWith(y)).length; return `📆 Année ${y}${n < 12 ? ` (${n} mois)` : ''}`; };
   const perSel = h('select', { onchange: e => { S.period = e.target.value; localStorage.setItem('period', S.period); S.of.sel.clear(); render(); } },
     h('option', { value: 'all' }, '📅 Toute la période'), h('option', { value: 'm3' }, '3 derniers mois'), h('option', { value: 'm6' }, '6 derniers mois'), h('option', { value: 'm12' }, '12 derniers mois'),
-    h('option', { value: 'y' }, 'Année en cours'), h('optgroup', { label: 'Par mois' }, [...ms].reverse().map(m => h('option', { value: m }, monthLabel(m, true)))));
-  perSel.value = S.period;
+    h('option', { value: 'y' }, 'Année en cours'), h('optgroup', { label: 'Par année (entière)' }, years.map(y => h('option', { value: 'y:' + y }, yearLabel(y)))), h('optgroup', { label: 'Par mois' }, [...ms].reverse().map(m => h('option', { value: m }, monthLabel(m, true)))));
+  perSel.value = S.period; if (perSel.value !== S.period) { S.period = 'all'; perSel.value = 'all'; localStorage.setItem('period', 'all'); }
   f.append(accSel, perSel);
 }
 
