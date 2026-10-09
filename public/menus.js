@@ -32,7 +32,7 @@ const groupHidden = (g, cfg) => !g.locked && cfg.hidden.includes('g:' + g.id);
 function navLookup(id) { for (const g of navModel()) { const it = g.items.find(i => i.id === id); if (it) return { item: [it.id, it.icon, it.label], group: g }; } return null; }
 
 function renderNav() {
-  const nav = $('#nav'); nav.innerHTML = '';
+  const nav = $('#nav'), keepScroll = nav.scrollTop; nav.innerHTML = '';
   const cfg = menuCfg(), open = JSON.parse(localStorage.getItem('navOpen') || '{}');
   const link = it => h('a', { href: '#/' + it.id, class: it.id === S.page ? 'active' : '' }, h('span', { class: 'ico' }, it.icon), it.label);
   for (const g of navModel(cfg)) {
@@ -46,6 +46,10 @@ function renderNav() {
         h('span', { class: 'ico' }, g.icon || '📁'), g.label, h('span', { class: 'chev' }, '▸')),
       isOpen ? h('div', { class: 'navsub' }, items.map(link)) : null));
   }
+  // le défilement de la barre latérale est conservé (sinon un clic dans « Administration » la ramenait en haut) et l'entrée active reste visible
+  nav.scrollTop = keepScroll;
+  const act = nav.querySelector('a.active');
+  if (act) { const r = act.getBoundingClientRect(), nr = nav.getBoundingClientRect(); if (r.top < nr.top || r.bottom > nr.bottom) act.scrollIntoView({ block: 'nearest' }); }
 }
 function setPageTitle() {
   const f = navLookup(S.page), t = $('#pageTitle'); t.innerHTML = '';
