@@ -68,6 +68,7 @@ function buildAnalysisData(an) {
 
 /** Analyse rédigée localement (statistiques simples, sans IA). */
 function localAnalysis(D, focus) {
+  if (D.type === 'pluriannuelle') return localMultiYear(D, focus);
   const T = D.totaux, e0 = x => eur0(x), pc = x => (x == null ? '–' : x.toFixed(1).replace('.', ',') + ' %');
   const out = [], P = D.periode;
   out.push(`## Synthèse`, `Sur **${anPeriodLabel(P.du, P.au)}** (${P.comptes}, ${P.nb_mois} mois), vos revenus s’élèvent à **${e0(T.revenus)}** et vos dépenses à **${e0(T.depenses)}**, soit une épargne de **${e0(T.epargne)}** et un taux d’épargne de **${pc(T.taux_epargne_pct)}**. Dépense moyenne : ${e0(T.depense_moyenne_mensuelle)} / mois pour ${e0(T.revenu_moyen_mensuel)} / mois de revenus.`);
@@ -125,6 +126,7 @@ function mdToHtml(md) {
 }
 
 function analysisToPdf(entry, D) {
+  if (D?.type === 'pluriannuelle') return multiYearPdf(entry, D);
   const T = D?.totaux;
   const blocks = [];
   if (T) {
@@ -157,9 +159,12 @@ async function pageAnalyse(v) {
   const scopeSel = h('select', { onchange: e => set({ scope: e.target.value }) }, h('option', { value: 'courants', selected: an.scope === 'courants' }, '💳 Comptes courants'), h('option', { value: 'tous', selected: an.scope === 'tous' }, '🏦 Tous les comptes'),
     S.data.accounts.map(a => h('option', { value: a.number, selected: an.scope === a.number }, `${accIcon(a.type)} ${accName(a)}`)));
   const focusSel = h('select', { onchange: e => set({ focus: e.target.value }) }, Object.entries(AN_FOCUS).map(([k, l]) => h('option', { value: k, selected: an.focus === k }, l)));
-  const { D, A, months } = buildAnalysisData(an);
+  const multi = an.mode === 'pluri';
+  const { D, A, months } = multi ? buildMultiYearData(an.scope) : buildAnalysisData(an);
   const isLocalProv = dis.provider === 'local', isOllama = !!dis.providers[dis.provider]?.localModel;
 
+  v.append(h('div', { class: 'toolbar' }, h('div', { class: 'seg' }, [['periode', '📅 Une période'], ['pluri', '📚 Pluriannuelle (toutes les années)']].map(([k, l]) => h('button', { class: (multi ? 'pluri' : 'periode') === k ? 'on' : '', onclick: () => set({ mode: k }) }, l)))));
+  if (multi) { multiYearView(v, an, D, { scopeSel, focusSel }); } else {
   v.append(h('div', { class: 'card' },
     h('div', { class: 'grid g3', style: { gap: '14px' } },
       h('div', { class: 'field' }, h('label', {}, 'Comptes'), scopeSel),
@@ -174,6 +179,7 @@ async function pageAnalyse(v) {
   v.append(h('div', { class: 'grid g4', style: { marginTop: '18px' } },
     kpi('k1', 'Dépenses', eur0(T.depenses), eur0(T.depense_moyenne_mensuelle) + ' / mois', '💸'), kpi('k2', 'Revenus', eur0(T.revenus), eur0(T.revenu_moyen_mensuel) + ' / mois', '💰'),
     kpi('k3', 'Épargne', signed(T.epargne), (T.taux_epargne_pct ?? '–') + ' % des revenus', '🐖'), kpi('k4', 'Période', months.length + ' mois', anPeriodLabel(an.from, an.to), '📅')));
+  }
 
   // actions
   const consent = h('input', { type: 'checkbox', checked: an.consent, onchange: e => { an.consent = e.target.checked; runBtn.disabled = !isLocalProv && !isOllama && !an.consent; } });
@@ -184,7 +190,7 @@ async function pageAnalyse(v) {
     isOllama ? h('div', { class: 'tip', style: { marginBottom: '12px' } }, '🔒 Modèle local : les données restent sur votre ordinateur.') : null,
     h('div', { class: 'toolbar', style: { margin: 0 } }, runBtn,
       h('button', { class: 'btn sec', onclick: () => previewPrompt(an, D) }, '👁️ Aperçu de ce qui sera envoyé'),
-      h('button', { class: 'btn sec', onclick: async () => { const text = localAnalysis(D, an.focus); const r = await (await fetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `Analyse locale · ${anPeriodLabel(an.from, an.to)}`, text, meta: metaOf(an) }) })).json(); anCurrent = { entry: r.analysis, D }; toast('Analyse locale terminée'); render(); } }, '📊 Analyse locale rapide'))));
+      h('button', { class: 'btn sec', onclick: async () => { const text = localAnalysis(D, an.focus); const r = await (await fetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: anTitle('Analyse locale', an, D), text, meta: anMeta(an, D) }) })).json(); anCurrent = { entry: r.analysis, D }; toast('Analyse locale terminée'); render(); } }, '📊 Analyse locale rapide'))));
 
   // résultat courant
   if (anCurrent) v.append(resultCard(anCurrent.entry, anCurrent.D, false));
@@ -196,6 +202,8 @@ async function pageAnalyse(v) {
       h('span', { class: 'badge' }, 'Ouvrir'),
       h('button', { class: 'icon-btn', title: 'Supprimer', onclick: async ev => { ev.stopPropagation(); await fetch('/api/ai/history?id=' + e.id, { method: 'DELETE' }); if (anCurrent?.entry.id === e.id) anCurrent = null; render(); } }, '🗑️')))) : h('div', { class: 'empty' }, 'Aucune analyse enregistrée.')));
 }
+const anTitle = (kind, an, D) => D.type === 'pluriannuelle' ? `${kind} pluriannuelle · ${multiLabel(D)}` : `${kind} · ${anPeriodLabel(an.from, an.to)}`;
+const anMeta = (an, D) => D.type === 'pluriannuelle' ? { periode: 'Années ' + multiLabel(D), comptes: anScopeLabel(an.scope), multi: true, focus: an.focus, scopeRaw: an.scope } : metaOf(an);
 const metaOf = an => ({ periode: anPeriodLabel(an.from, an.to), comptes: anScopeLabel(an.scope), from: an.from, to: an.to, focus: an.focus });
 
 function resultCard(entry, D, fresh) {
@@ -204,7 +212,8 @@ function resultCard(entry, D, fresh) {
       h('span', { style: { display: 'flex', gap: '8px' } },
         h('button', { class: 'btn sm sec', onclick: () => { navigator.clipboard?.writeText(entry.text); toast('Analyse copiée'); } }, '⧉ Copier'),
         h('button', { class: 'btn pdf', onclick: async () => {
-          let d = D; if (!d && entry.meta?.from) d = buildAnalysisData({ scope: S.data.accounts.some(a => a.number === entry.meta.scopeRaw) ? entry.meta.scopeRaw : (S.an?.scope ?? 'courants'), from: entry.meta.from, to: entry.meta.to, compare: false }).D;
+          let d = D; if (!d && entry.meta?.multi) d = buildMultiYearData(entry.meta.scopeRaw ?? 'courants').D;
+          if (!d && entry.meta?.from) d = buildAnalysisData({ scope: S.data.accounts.some(a => a.number === entry.meta.scopeRaw) ? entry.meta.scopeRaw : (S.an?.scope ?? 'courants'), from: entry.meta.from, to: entry.meta.to, compare: false }).D;
           await generateReport(analysisToPdf(entry, d)); } }, '📄 Exporter en PDF'))),
     h('div', { class: 'muted', style: { margin: '-6px 0 12px', fontSize: '12.5px' } }, `${fmtDT(entry.date)} · ${entry.kind === 'ia' ? 'fournisseur ' + entry.provider + ' · modèle ' + entry.model : 'analyse locale (sans IA)'}${entry.meta?.periode ? ' · ' + entry.meta.periode : ''}`),
     h('div', { class: 'md', html: mdToHtml(entry.text) }));
@@ -219,14 +228,15 @@ async function previewPrompt(an, D) {
   ], close => [h('button', { class: 'btn', onclick: close }, 'Fermer')], true);
 }
 function fillTemplates(t, an, D) {
-  const fill = s => s.replaceAll('{{periode}}', anPeriodLabel(an.from, an.to)).replaceAll('{{comptes}}', anScopeLabel(an.scope)).replaceAll('{{focus}}', AN_FOCUS[an.focus]).replaceAll('{{donnees}}', JSON.stringify(D, null, 1));
-  return { system: fill(t.system), user: fill(t.user) };
+  const multi = D.type === 'pluriannuelle', per = multi ? `${multiLabel(D)} (${D.periode.nb_annees} année${D.periode.nb_annees > 1 ? 's' : ''})` : anPeriodLabel(an.from, an.to);
+  const fill = s => s.replaceAll('{{periode}}', per).replaceAll('{{comptes}}', anScopeLabel(an.scope)).replaceAll('{{focus}}', AN_FOCUS[an.focus]).replaceAll('{{donnees}}', JSON.stringify(D, null, 1));
+  return { system: fill(t.system), user: fill(multi ? (t.userMulti || t.user) : t.user) };
 }
 async function runAiAnalysis(an, D, dis, btn) {
   btn.disabled = true; btn.textContent = '⏳ Analyse en cours…';
   try {
     const pr = await (await fetch('/api/prompts')).json(), { system, user } = fillTemplates(pr.templates, an, D);
-    const r = await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, user, title: `Analyse IA · ${anPeriodLabel(an.from, an.to)}`, meta: { ...metaOf(an), scopeRaw: an.scope } }) });
+    const r = await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, user, title: anTitle('Analyse IA', an, D), meta: { ...anMeta(an, D), scopeRaw: an.scope } }) });
     const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Erreur');
     anCurrent = { entry: j.analysis, D }; toast('✅ Analyse terminée'); render();
   } catch (e) { toast('⚠️ ' + e.message); btn.disabled = false; btn.textContent = '🧠 Lancer l’analyse IA'; }

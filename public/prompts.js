@@ -82,7 +82,8 @@ function templatesTab(v, D) {
   v.append(h('div', { class: 'card' }, h('h2', {}, '🧠 Modèles de prompt de l’analyse IA', h('small', {}, 'utilisés par Analyse › Analyse IA')),
     h('div', { class: 'tip', style: { marginBottom: '14px' } }, 'Variables disponibles dans le message : ', ...['{{periode}}', '{{comptes}}', '{{focus}}', '{{donnees}}'].map(x => h('span', { class: 'kbd', style: { margin: '0 4px' } }, x)), ' — {{donnees}} (obligatoire) est remplacé par les données agrégées de la période.'),
     h('div', { class: 'field' }, h('label', {}, 'Consigne système (rôle et style de l’IA)'), area('system', 6)),
-    h('div', { class: 'field', style: { marginTop: '14px' } }, h('label', {}, 'Message envoyé (structure de l’analyse demandée)'), area('user', 16)),
+    h('div', { class: 'field', style: { marginTop: '14px' } }, h('label', {}, 'Message envoyé — analyse d’une période'), area('user', 14)),
+    h('div', { class: 'field', style: { marginTop: '14px' } }, h('label', {}, 'Message envoyé — analyse pluriannuelle (toutes les années)'), area('userMulti', 14)),
     h('div', { class: 'toolbar', style: { margin: '14px 0 0' } },
       h('button', { class: 'btn', onclick: async () => { await prApi('/api/prompts/templates', 'PUT', d); toast('✅ Modèles enregistrés'); render(); } }, 'Enregistrer les modèles'),
       h('button', { class: 'btn sec', onclick: () => modal('Rétablir les modèles par défaut ?', [h('p', {}, 'Vos modifications des modèles seront perdues.')], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: async () => { await prApi('/api/prompts/templates/reset', 'POST'); close(); toast('Modèles rétablis'); render(); } }, 'Rétablir')]) }, '↺ Valeurs par défaut'))));
