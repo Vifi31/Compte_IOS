@@ -1,5 +1,80 @@
 # Journal des modifications
 
+## 2.1.6 — 2026-10-07
+- Filtre de période : choix d'une année entière existante (Année 2025, Année 2024…) en plus des mois, des 3/6/12 derniers mois et de l'année en cours ; valable pour Catégories, tableau de bord, opérations, statistiques, rapports
+
+## 2.1.5 — 2026-10-06
+- Barre latérale : le défilement est conservé d'un clic à l'autre et l'entrée active reste visible (les entrées du menu Administration, dont Sauvegardes, ne disparaissent plus hors de l'écran)
+
+## 2.1.4 — 2026-10-05
+- PDF : le tableau « Planning : fonds disponibles et financement » tient sur une page ; plus aucun titre orphelin (le contenu qui suit un titre reste sur la même page) ; en-têtes de colonnes sur deux lignes ; suppression d'une page blanche en fin de dossier
+
+## 2.1.3 — 2026-10-05
+- Export PDF de la documentation : plus de saut de page juste après un titre de chapitre ou de section (le titre accompagne son contenu, image comprise)
+
+## 2.1.2 — 2026-10-05
+- Dossier PDF « Planning et simulation » : ajout des graphiques « Épargne, prêts et relais dans le temps » et « Calendrier du projet » (avec « Financement de chaque échéance »)
+
+## 2.1.1 — 2026-10-05
+- PDF du plan d'actions : chaque phase (titre + tableau) et le tableau des contraintes ne sont plus coupés entre deux pages quand ils tiennent sur une page
+
+## 2.1.0 — 2026-10-05
+- Documentation : mode d'emploi illustré (28 copies d'écran, parcours en 5 étapes, images dans l'export PDF) ; nouveau sous-menu Administration › Documentation technique (schémas d'architecture, flux, import, données, moteur immobilier, sauvegardes, PDF, IA, déploiement ; chiffres calculés ; export PDF) ; correctif : texte « null » dans la liste des rapports
+
+## 2.0.6 — 2026-10-04
+- Plan d'actions : dépendances entre tâches avec délais avant/après et durées, contraintes affichées (puces, alertes, recalage automatique des dates), diagramme de Gantt avec flèches de dépendance, intégrés au PDF (Gantt + tableau des contraintes)
+
+## 2.0.5 — 2026-10-04
+- PDF du plan d'actions : indicateurs, points de vigilance, graphiques (répartition, avancement par phase, échéances par mois), plan détaillé par phase coloré ; tableaux PDF : texte long sur plusieurs lignes sans chevauchement ; barres empilées
+
+## 2.0.4 — 2026-10-04
+- Immobilier : Analyse IA, Plan d'actions et Suivi redessinés avec couleurs et graphiques (jauge de santé, anneaux, barres, courbes, tuiles, pastilles d'échéance) ; correction des couleurs personnalisées des cartes
+
+## 2.0.3 — 2026-10-04
+- Immobilier : intérêts de l'épargne calculés par quinzaine échue et crédités le 31 décembre ; Paramètres : Le projet/Frais annexes et Appels de fonds/Épargne dédiée côte à côte, cartes colorées et compactes ; Planning : colonnes colorées et compactes, graphiques 2 par 2 ; Plan d'actions : ajout rapide de tâches intégrées au plan et au suivi
+
+## 2.0.2 — 2026-10-04
+- Rapports PDF : liste triable par colonne, recherche, sélection multiple (téléchargement ZIP, suppression), renommage
+- PDF : mise en page soignée (bandeau dégradé, KPI colorés, tableaux, pieds de page) et encadrés « Points de vigilance » dans les rapports, analyses et dossier VEFA
+
+## 2.0.1 — 2026-10-04
+- Tous les PDF : fenêtre d'options (portrait/paysage, A4/A3, avec ou sans graphiques), choix mémorisés
+
+## 2.0.0 — 2026-10-04
+- Mise en place du projet Immobilier en VEFA
+- Validation des données et du suivi VEFA
+- Analyse IA est en français
+- Validation de la 2.0.0
+
+## 1.7.2 — 2026-10-04
+- Analyse IA VEFA en français : Ollama utilise une fenêtre de contexte adaptée à la taille du prompt (les consignes n'étaient plus tronquées), délai d'attente porté à 30 min sans coupure à 5 min, données plus compactes, rappel de la langue après les données
+
+## 1.7.1 — 2026-10-03
+- Analyse IA du projet VEFA : réponse exigée intégralement en français (consigne renforcée)
+
+## 1.7.0 — 2026-10-03
+- Immobilier : nouveau sous-menu Analyse IA (faisabilité, prêt relais, risques, plan d'actions), aperçu de l'envoi, analyse locale sans IA, export PDF, historique
+
+## 1.6.3 — 2026-10-03
+- Immobilier : opérations des Paramètres triées par date décroissante
+- Planning : épargne mensuelle dédiée ajoutée à l'épargne disponible, détail par ligne (reprise + épargne mensuelle ± intérêts = épargne avant), option d'affichage de chaque versement, date de fin d'épargne mensuelle, PDF mis à jour
+
+## 1.6.2 — 2026-10-03
+- Immobilier : la page Projet VEFA ne garde que le bandeau récapitulatif (indicateurs, verdict relais, synthèse en lecture seule, points d’attention)
+- Nouveau sous-menu Immobilier › Paramètres : toutes les zones de saisie du projet (projet, frais, appels de fonds, épargne, financements, prêt relais, fonds supplémentaires, réinitialisation)
+
+## 1.6.1 — 2026-10-03
+- Immobilier : dans les tableaux, plus de recalcul à chaque champ — la modification est enregistrée aussitôt et le calcul attend que la ligne soit complète (sortie de la ligne), ligne en cours surlignée
+
+## 1.6.0 — 2026-10-03
+- Nouveau menu Immobilier : gestion d’une acquisition en VEFA (projet, frais, appels de fonds, épargne, financements externes, prêt relais de 24 mois, fonds supplémentaires)
+- Planning : fonds disponibles à chaque appel, décision et montants de déblocage du prêt relais, alertes ; simulation « et si » ; 4 graphiques de simulation et de suivi
+- Suivi réel/prévu des appels et de l’épargne, plan d’actions généré sur la durée du projet, dossier PDF
+
+## 1.5.0 — 2026-10-03
+- Analyse › mode Pluriannuelle : grandes lignes de toutes les années présentes (synthèse par année, évolution des postes, patrimoine, saisonnalité)
+- Années partielles comparées sur les moyennes mensuelles des mois complets ; modèle de prompt pluriannuel modifiable ; analyse IA ou locale ; export PDF
+
 ## 1.4.8 — 2026-10-03
 - Publication GitHub : noms de personnes et organismes personnels retirés des règles par défaut (le paramétrage existant est conservé)
 - Virements internes : le nom du titulaire est lu dans l’en-tête des relevés au lieu d’être codé en dur
