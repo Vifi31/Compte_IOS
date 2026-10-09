@@ -8,6 +8,7 @@ import { enrich, categorize, DEFAULT_CATEGORIES, DEFAULT_RULES } from './lib/enr
 import { setupExtra } from './lib/extra.mjs';
 import { manualData, setupManual } from './lib/manual.mjs';
 import { setupFeatures, licenseBrief } from './lib/features.mjs';
+import { collectTechInfo } from './lib/techinfo.mjs';
 
 import { ROOT, DATA_DIR, PORT as CFG_PORT, HOME, INSTALLED } from './lib/paths.mjs';
 const PUBLIC = path.join(ROOT, 'public');
@@ -119,6 +120,7 @@ async function api(req, res, url) {
   if (p === '/api/ping' && m === 'GET') return json(res, 200, { ok: true, app: 'Comptes', version: currentVersion(), installed: INSTALLED, home: HOME });
   if (p === '/api/shutdown' && m === 'POST') { json(res, 200, { ok: true }); setTimeout(() => process.exit(0), 200); return; }
   if (p === '/api/state' && m === 'GET') return json(res, 200, buildState());
+  if (p === '/api/techinfo' && m === 'GET') return json(res, 200, collectTechInfo(ROOT, { store }));
   if (p === '/api/menu' && m === 'PUT') {
     const b = await readBody(req), strs = (x, n) => (Array.isArray(x) ? x : []).filter(y => typeof y === 'string' && y.length < 40).slice(0, n);
     store.settings ??= {};

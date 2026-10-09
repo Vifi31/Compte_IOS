@@ -46,6 +46,7 @@ async function exportDocsPdf() {
       for (const el of sec.children) {
         const tag = el.tagName;
         if (tag === 'H3') continue;
+        if (tag === 'FIGURE') { blocks.push({ t: 'image', file: el.dataset.img + '.jpg', caption: el.querySelector('figcaption')?.textContent.replace(/^📷\s*/, '') }); continue; }
         if (tag === 'H4') blocks.push({ t: 'h3', text: el.textContent.trim() });
         else if (tag === 'P') blocks.push({ t: 'p', text: el.textContent.trim() });
         else if (tag === 'UL' || tag === 'OL') [...el.children].forEach((li, i) => blocks.push({ t: 'p', text: (tag === 'OL' ? `${i + 1}.  ` : '•  ') + li.textContent.trim(), indent: 10 }));

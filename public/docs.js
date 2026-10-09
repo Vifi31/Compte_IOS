@@ -6,6 +6,10 @@ function pageDocs(v) {
   const b = t => h('b', {}, t), kbd = t => h('span', { class: 'kbd' }, t);
   const tip = (...k) => h('div', { class: 'tip' }, '💡 ', ...k), warn = (...k) => h('div', { class: 'tip warn' }, '⚠️ ', ...k);
   const link = (label, hash) => h('a', { href: '#/' + hash, class: 'doclink' }, label);
+  /** Copie d'écran (public/docs-img/<nom>.jpg) : un clic l'agrandit. */
+  const fig = (name, caption) => h('figure', { class: 'docfig', 'data-img': name },
+    h('img', { src: '/docs-img/' + name + '.jpg', alt: caption, loading: 'lazy', title: 'Cliquer pour agrandir', onclick: () => modal(caption, [h('img', { src: '/docs-img/' + name + '.jpg', alt: caption, style: { width: '100%', borderRadius: '10px' } })], close => [h('button', { class: 'btn', onclick: close }, 'Fermer')], true) }),
+    h('figcaption', {}, '📷 ' + caption));
 
   const SECTIONS = [
     ['start', '🚀', 'Premiers pas', [
@@ -14,10 +18,11 @@ function pageDocs(v) {
       ol(['Double-cliquez sur ', b('Comptes.bat'), ' (ou lancez ', kbd('npm start'), ' dans le dossier du projet).'], 'Ouvrez http://localhost:3210 dans votre navigateur.'),
       h('h4', {}, 'Organisation de l’écran'),
       ul(['Le ', b('menu de gauche'), ' donne accès aux pages ; le bouton ', b('📥 Ajouter un relevé'), ' et le choix du ', b('thème clair/sombre'), ' sont en bas.'],
-        ['Les deux ', b('filtres en haut à droite'), ' (comptes et période : mois précis, 3, 6 ou 12 derniers mois, année en cours, toute la période) s’appliquent aux pages tableau de bord, opérations, statistiques, catégories, comptes et rapports.']),
+        ['Les deux ', b('filtres en haut à droite'), ' (comptes et période : mois précis, année entière existante (par exemple « Année 2025 », avec le nombre de mois pour une année incomplète), 3, 6 ou 12 derniers mois, année en cours, toute la période) s’appliquent aux pages tableau de bord, opérations, statistiques, catégories, comptes et rapports.']),
       tip('Par défaut, seuls les ', b('comptes courants'), ' sont analysés : les livrets et plans d’épargne sont exclus des totaux. Choisissez « Tous les comptes » ou un compte précis dans le premier filtre pour changer cela.'),
     ]],
     ['import', '📥', 'Ajouter des relevés', [
+      fig('statements', "La page Relevés : zone de dépôt des PDF, indicateurs et contrôles automatiques."),
       ul(['Cliquez sur ', b('📥 Ajouter un relevé'), ' dans le menu, ou sur la zone en pointillés de la page ', link('Comptes', 'accounts'), '.'],
         ['Vous pouvez aussi ', b('glisser-déposer'), ' un ou plusieurs PDF n’importe où dans la fenêtre.'],
         'Les fichiers sont copiés dans Documents/Releves, vérifiés puis importés. Une fenêtre indique le résultat de chaque fichier.'),
@@ -28,6 +33,7 @@ function pageDocs(v) {
       tip('Vous pouvez aussi copier vous-même les PDF dans le dossier Documents/Releves, puis cliquer sur ', b('↻ Réimporter les PDF'), ' (page Comptes). Vos catégories et corrections sont conservées.'),
     ]],
     ['dashboard', '📊', 'Tableau de bord', [
+      fig('dashboard', "Le tableau de bord : indicateurs, dépenses par catégorie, revenus et dépenses par mois, évolution des soldes."),
       ul([b('Indicateurs'), ' : dépenses, revenus, épargne nette (et son taux) et patrimoine total sur la période choisie.'],
         [b('Dépenses par catégorie'), ' : le graphique en anneau et la liste détaillée. Cliquez sur une catégorie pour voir ses opérations.'],
         [b('Revenus vs dépenses'), ' : barres par mois et courbe du solde mensuel.'],
@@ -37,6 +43,7 @@ function pageDocs(v) {
       p2('Les virements entre vos propres comptes ne comptent ni comme dépense ni comme revenu.'),
     ]],
     ['operations', '🧾', 'Opérations', [
+      fig('operations', "La liste des opérations : recherche, filtres, catégories et montants."),
       h('p', {}, 'Toutes les opérations de la période, avec leur catégorie.'),
       ul([b('Recherche'), ' : libellé, commerçant ou montant exact (ex. 49,90).'],
         [b('Filtres'), ' : catégorie, débits / crédits, virements internes (masqués par défaut), opérations « non classées ».'],
@@ -49,6 +56,7 @@ function pageDocs(v) {
       tip('Le bouton ', b('❓ n non classées'), ' liste les opérations qu’aucune règle n’a reconnues : c’est le moyen le plus rapide d’améliorer le classement.'),
     ]],
     ['categories', '🏷️', 'Catégories et règles', [
+      fig('categories', "Une carte par catégorie : total, moyenne mensuelle, budget et nombre de règles."),
       h('h4', {}, 'Gérer les catégories'),
       ul([b('＋ Nouvelle catégorie'), ' : nom, icône (plus de 300 icônes classées par thème, avec effet loupe au survol, ou emoji saisi au clavier), couleur, type et budget mensuel facultatif.'],
         [b('✏️'), ' modifie, ', b('🗑️'), ' supprime (vous choisissez où déplacer les opérations classées à la main ; les règles associées sont supprimées).'],
@@ -61,6 +69,7 @@ function pageDocs(v) {
       tip('Le budget mensuel d’une catégorie alimente les barres du tableau de bord. La page ', link('Prévisions', 'forecast'), ' peut les remplir en un clic.'),
     ]],
     ['stats', '📈', 'Statistiques', [
+      fig('stats', "Les statistiques : dépenses mensuelles empilées par catégorie et évolution de chaque catégorie."),
       ul([b('Dépenses mensuelles par catégorie'), ' : barres empilées.'],
         [b('Évolution par catégorie'), ' : choisissez les catégories à comparer en cliquant sur les pastilles.'],
         [b('Tableau croisé catégories × mois'), ' : intensité de couleur proportionnelle au montant, total, moyenne et variation du dernier mois.'],
@@ -68,10 +77,12 @@ function pageDocs(v) {
         [b('Jour de la semaine'), ' : répartition des dépenses.']),
     ]],
     ['compare', '⚖️', 'Comparer deux périodes', [
+      fig('compare', "La comparaison de deux périodes : indicateurs, dépenses par catégorie et cumul jour par jour."),
       ol(['Choisissez les mois de début et de fin de la ', b('période A'), ' et de la ', b('période B'), ' (référence).'], ['Ou utilisez un raccourci : mois contre mois précédent, trimestre contre précédent, même période l’an dernier, première moitié contre seconde.'], ['Basculez entre ', b('Totaux'), ' et ', b('Moyenne / mois'), ' si les périodes n’ont pas la même durée.']),
       p2('Vous obtenez les écarts en euros et en pourcentage (vert = favorable, rouge = défavorable), un graphique par catégorie, les dépenses cumulées jour par jour, un tableau détaillé et les plus fortes hausses/baisses par poste de dépense.'),
     ]],
     ['forecast', '🔮', 'Prévisions budgétaires', [
+      fig('forecast', "Les prévisions budgétaires : trajectoire mensuelle, comparaison avec l’année de référence, valeurs modifiables."),
       h('p', {}, 'Construit le budget de l’année ', b('n+1'), ' à partir de l’année ', b('n'), ' que vous choisissez.'),
       h('h4', {}, 'Principe de calcul'),
       ul('Seuls les mois complets de l’année de référence servent de base (les mois entamés ou manquants sont ignorés).', [b('Moyenne mensuelle'), ' : chaque mois reçoit la moyenne de la catégorie.'], [b('Saisonnalité'), ' : chaque mois reprend le réalisé du même mois ; les mois sans donnée reçoivent la moyenne.'], ['Les champs ', b('Dépenses %'), ' / ', b('Revenus %'), ' appliquent une hausse ou une baisse globale (inflation, augmentation de salaire…).']),
@@ -85,11 +96,19 @@ function pageDocs(v) {
       p2('Vos saisies sont enregistrées automatiquement, séparément pour chaque année cible et chaque choix de comptes.'),
     ]],
     ['reports', '📄', 'Rapports PDF', [
+      fig('reports', "Les cinq rapports PDF disponibles."),
+      fig('pdf-options', "Avant chaque génération : orientation, format de papier et graphiques."),
+      fig('pdf-synthese', "Aperçu d’un rapport (synthèse financière) : en-tête coloré, indicateurs et points de vigilance."),
+      fig('reports-list', "Les rapports générés : tri par colonne, recherche, sélection multiple, ZIP, renommage."),
       h('p', {}, 'La page ', link('Rapports PDF', 'reports'), ' produit des documents PDF prêts à imprimer ou à partager. Ils reprennent les filtres choisis en haut de page (comptes et période).'),
       ul([b('Synthèse financière'), ' : indicateurs, dépenses par catégorie, évolution mensuelle, postes principaux, soldes.'], [b('Opérations détaillées'), ' : liste complète, triée par date ou groupée par catégorie avec sous-totaux.'], [b('Comparaison de deux périodes'), ' : reprend les périodes A et B de la page Comparer.'], [b('Prévision budgétaire'), ' : l’année suivante mois par mois, avec vos saisies (format paysage).'], [b('Dépenses mensuelles'), ' : tableau croisé catégories × mois (format paysage).']),
+      p2([b('Options du PDF'), ' : avant chaque génération (rapports, analyses, journaux, documentation, dossier VEFA…), une fenêtre permet de choisir l’orientation (portrait ou paysage), le format (A4 ou A3) et d’inclure ou non les graphiques. Le format et le choix des graphiques sont mémorisés ; l’orientation proposée dépend du document.']),
+      p2([b('Présentation'), ' : bandeau en dégradé, indicateurs colorés, titres de section, tableaux à lignes alternées et encadrés « Points de vigilance » (rouge : critique, orange : à surveiller, vert : rien à signaler) : mois déficitaires, épargne faible, dépenses concentrées ou en forte hausse, comptes à découvert, échéances non financées, réserve entamée, relais à débloquer… Les analyses IA mettent aussi en valeur leurs sections de risques.']),
+      p2([b('Gérer les rapports générés'), ' : cliquez sur un en-tête de colonne pour trier (rapport, fichier, format, date, taille) ; recherchez par mot ; cochez plusieurs rapports (Maj + clic pour une plage, case d’en-tête pour tout sélectionner) puis téléchargez-les en ZIP ou supprimez-les ; renommez un fichier avec ✏️.']),
       p2('Chaque rapport s’ouvre dans un nouvel onglet et reste disponible dans la liste « Rapports générés » (ouvrir, télécharger, supprimer). Les fichiers sont dans le dossier Rapports.'),
     ]],
     ['backups', '💾', 'Sauvegardes', [
+      fig('backups', "Les sauvegardes : création en un clic, planification, volumes et historique."),
       h('p', {}, 'La page ', link('Sauvegardes', 'backups'), ' protège vos données et le programme dans des archives ZIP (dossier Sauvegardes).'),
       h('h4', {}, 'Trois types'),
       ul([b('Données'), ' : paramétrage (catégories, règles, corrections, prévisions, noms de comptes) + relevés PDF.'], [b('Programme'), ' : le code de l’application, sans vos données personnelles.'], [b('Complète'), ' : données + programme + rapports PDF.']),
@@ -106,6 +125,7 @@ function pageDocs(v) {
         [b('👁️'), ' ouvre le PDF, ', b('⬇️'), ' le télécharge, ', b('🗑️'), ' le supprime (les opérations correspondantes disparaissent de l’application).'], 'Le bouton « Ajouter des relevés PDF » (ou le glisser-déposer) importe de nouveaux fichiers.'),
     ]],
     ['versions', '🏷️', 'Gestion des versions', [
+      fig('versions', "La gestion des versions : publication (mineur / intermédiaire / majeur), prompt associé et historique."),
       h('p', {}, 'La page ', link('Versions', 'versions'), ' gère les versions du programme (numéro affiché en bas du menu).'),
       ul([b('Publier une version'), ' : choisissez l’importance — ', b('Mineur'), ' (+0.0.1, ex. 1.4.0 → 1.4.1), ', b('Intermédiaire'), ' (+0.1.0, → 1.5.0) ou ', b('Majeur'), ' (+1.0.0, → 2.0.0) — décrivez les changements et indiquez le prompt utilisé (case à cocher parmi les demandes du journal non encore rattachées, ou texte libre) : le numéro est incrémenté, le journal CHANGELOG.md est mis à jour et un instantané du programme est enregistré (dossier Versions).'],
         [b('💬 Prompt'), ' : chaque version affiche le prompt qui l’a motivée ; ce bouton permet de le modifier ou d’en ajouter un depuis le journal. Les demandes rattachées prennent le numéro de la version, et suivent ses renumérotations. Le prompt figure aussi dans l’export PDF des versions.'],
@@ -114,6 +134,7 @@ function pageDocs(v) {
       tip('Les versions ne contiennent que le programme. Vos données (relevés, catégories, règles) se protègent avec les ', link('Sauvegardes', 'backups'), '.'),
     ]],
     ['menus', '🎛️', 'Organisation et affichage des menus', [
+      fig('menus', "L’affichage des menus : libellés, icônes, ordre, déplacement et création de menus."),
       h('p', {}, 'Le menu de gauche est organisé en groupes dépliables :'),
       ul([b('Gestion Données'), ' : Catégories, Comptes, Relevés.'], [b('Administration'), ' : Sauvegardes, Versions, Affichage des menus.'], 'Les autres entrées (tableau de bord, opérations, statistiques, comparaison, prévisions, rapports, documentation) restent en accès direct.'),
       h('p', {}, 'La page ', link('Affichage des menus', 'menus'), ' (Administration) permet de :'),
@@ -121,6 +142,7 @@ function pageDocs(v) {
       tip('Cette page et le groupe Administration ne peuvent pas être masqués, pour que vous puissiez toujours retrouver ce réglage. Un menu masqué reste accessible par les liens de la documentation.'),
     ]],
     ['accounts', '🏦', 'Comptes', [
+      fig('accounts', "Les comptes : une carte par compte, évolution du solde et accès aux relevés."),
       ul([b('＋ Ajouter un compte'), ' : créez un compte saisi à la main (autre banque, espèces, carte de crédit, épargne) avec son solde initial. Sur sa carte, ➕ ajoute une opération, ✏️ modifie le compte et 🗑️ le supprime. Les opérations manuelles sont classées, comptées et exportées comme les autres ; pour un transfert vers un compte, utilisez la catégorie « Virements internes ».'], 'Une carte par compte (courants, Livret A, LDDS, CEL, PEL) avec son solde, les entrées et sorties de la période.', 'Cliquez sur une carte pour afficher la courbe d’évolution de son solde.', [b('✏️'), ' permet de donner un nom personnalisé à un compte.'], 'La liste des relevés importés indique ceux dont les totaux ont été vérifiés.'),
     ]],
     ['internal', '🔁', 'Virements internes', [
@@ -139,22 +161,27 @@ function pageDocs(v) {
       warn('Le MSI n’est pas signé numériquement : Windows peut afficher un avertissement SmartScreen à la première ouverture (« Informations complémentaires » › « Exécuter quand même »).'),
     ]],
     ['analyse', '🧠', 'Analyse IA des dépenses et revenus', [
+      fig('analyse', "L’analyse IA : choix de la période et de l’axe, aperçu de ce qui est envoyé, analyse locale."),
       h('p', {}, 'Le menu ', b('Analyse'), ' produit une analyse rédigée de vos dépenses et revenus sur la période de votre choix.'),
       ol(['Ouvrez ', link('Analyse IA', 'analyse'), ', choisissez les comptes, le mois de début et de fin, l’axe (dépenses, revenus, épargne) et, si vous le souhaitez, la comparaison avec la période précédente.'],
         ['Cliquez sur ', b('👁️ Aperçu de ce qui sera envoyé'), ' pour voir exactement les données et le prompt.'],
         [b('🧠 Lancer l’analyse IA'), ' envoie les données au fournisseur configuré (après votre consentement) ; ', b('📊 Analyse locale rapide'), ' produit une analyse par règles statistiques, sans rien envoyer.'],
         'Le résultat s’affiche, se copie, s’exporte en PDF et reste dans l’historique des analyses.'),
+      h('h4', {}, 'Analyse pluriannuelle'),
+      p2('Le bouton « Pluriannuelle (toutes les années) » en haut de la page analyse, dans les grandes lignes, toutes les années présentes dans vos relevés : synthèse par année (revenus, dépenses, épargne, taux d’épargne, patrimoine), évolution des principaux postes, hausses et baisses les plus marquées, mois les plus dépensiers, graphiques et tableau. Les années partielles sont comparées sur les moyennes mensuelles des mois complets ; une année sans mois complet n’entre pas dans les comparaisons. L’analyse peut être rédigée par l’IA (modèle de prompt « pluriannuel » modifiable dans Administration › Prompt) ou produite localement, et s’exporte en PDF.'),
       h('h4', {}, 'Configurer l’IA'),
       p2('Dans Analyse › Paramètres IA, choisissez un fournisseur : Anthropic (Claude), un service compatible OpenAI, ou Ollama (modèle local, rien ne quitte votre PC). Renseignez la clé API et le modèle, puis testez la connexion. Sans configuration, seule l’analyse locale est disponible.'),
       tip('Seules des données agrégées sont transmises (totaux par catégorie et par mois, principaux postes, anomalies) : jamais d’IBAN, de libellé bancaire détaillé ni de nom de personne. La clé API est stockée dans data/secrets.json, hors des sauvegardes. Les analyses sont fournies à titre indicatif et ne constituent pas un conseil financier.'),
     ]],
     ['prompts', '📜', 'Journal des prompts', [
+      fig('prompts', "Le journal des prompts : demandes, statuts, versions liées, export."),
       h('p', {}, 'La page ', link('Prompt', 'prompts'), ' (Administration) comporte deux onglets :'),
       ul([b('Journal des prompts'), ' : l’historique de toutes les demandes adressées pour construire l’application, et chaque prompt envoyé à l’IA (ajouté automatiquement, avec le fournisseur, le modèle et le résultat : envoyé ou erreur). Vous pouvez rechercher, filtrer, ajouter, ',
         b('modifier'), ' (texte, statut, version, date, notes), copier, supprimer et exporter le journal en Markdown.'],
         [b('Modèles d’analyse IA'), ' : la consigne système et le message utilisés par l’analyse, modifiables avec les variables {{periode}}, {{comptes}}, {{focus}} et {{donnees}}, et rétablissables par défaut.']),
     ]],
     ['license', '©️', 'Copyright et licence d’utilisation', [
+      fig('license', "Copyright et licence : titulaire, type de licence, contrat d’utilisation et acceptation."),
       h('p', {}, 'La page ', link('Licence', 'license'), ' (Administration) gère :'),
       ul([b('Le copyright'), ' (titulaire, année, produit), affiché dans le menu et en pied des rapports PDF.'],
         [b('La licence de diffusion'), ' du logiciel (propriétaire, MIT, Apache 2.0, GPL v3, CC BY-NC) et la génération des fichiers LICENSE et NOTICE.'],
@@ -164,11 +191,18 @@ function pageDocs(v) {
     ['exports', '📄', 'Exports PDF des pages d’administration', [
       p2('Les pages suivantes proposent un bouton « Exporter en PDF » : ' + 'Prompt (journal complet ou filtré), Versions (historique et journal des modifications), Documentation (ce mode d’emploi), Licence (copyright, licences, composants tiers) et Manifeste. Les boutons d’export sont en rouge/orange pour être repérés facilement. Les PDF s’ouvrent dans un nouvel onglet et sont conservés dans Rapports PDF. Le PDF de la documentation comporte une table des matières cliquable avec numéros de page, des chapitres numérotés et une pagination « Page x / n ».'),
     ]],
+    ['techdocs', '🛠️', 'Documentation technique', [
+      p2('Le sous-menu Administration › Documentation technique explique comment l’application est construite : architecture (navigateur, serveur local, fichiers), fonctionnement du démarrage à l’affichage, lecture des relevés PDF, stockage, organisation du code, API, moteur immobilier, sauvegardes, génération des PDF, IA, installation et sécurité.'),
+      ul([b('Schémas et infographies'), ' : chaque chapitre contient un schéma ; les chiffres (lignes de code, routes, taille des données…) sont calculés à partir des sources installées.'], [b('Exporter en PDF'), ' : le document complet, avec ses schémas, table des matières et numéros de page.']),
+      tip('Cette documentation s’adresse aux personnes qui veulent comprendre, maintenir ou faire évoluer l’application ; le mode d’emploi (menu Documentation) reste le guide de l’utilisateur.'),
+    ]],
     ['manifest', '📋', 'Manifeste du programme', [
+      fig('manifest', "Le manifeste : identité, fonctionnalités, composants et empreintes des fichiers."),
       h('p', {}, 'La page ', link('Manifeste', 'manifest'), ' (Administration) décrit le programme : identité, version, titulaire et licence, environnement, fonctionnalités, composants tiers et l’empreinte SHA-256 de chacun de ses fichiers.'),
       ul([b('Générer / mettre à jour MANIFEST.json'), ' enregistre le manifeste à la racine du programme.'], [b('Vérifier l’intégrité'), ' compare les fichiers actuels au manifeste enregistré et liste les fichiers modifiés, ajoutés ou supprimés.'], 'Le manifeste se télécharge en JSON et s’exporte en PDF. Le MSI embarque le manifeste de la version installée.'),
     ]],
     ['model', '🧬', 'Modèles de paramétrage', [
+      fig('model', "Les modèles de paramétrage : export et import sans donnée personnelle."),
       h('p', {}, 'La page ', link('Modèle', 'model'), ' (Administration) exporte et applique des modèles : des fichiers .json de paramétrage ', b('sans aucune donnée personnelle'), ' (ni opérations, ni relevés, ni comptes, ni clé API).'),
       ul([b('Créer un modèle'), ' : nom, description et éléments à inclure — catégories (avec budgets), règles, menus, modèles de prompt, fournisseur d’IA (sans clé), planification des sauvegardes, copyright et licence.'],
         [b('Appliquer un modèle'), ' : un fichier ou le modèle d’origine ; aperçu des changements, choix des éléments et du mode (fusionner ou remplacer les catégories et règles). Une sauvegarde « Données » est créée avant l’application.']),
@@ -185,7 +219,56 @@ function pageDocs(v) {
       faq('La page ne se met pas à jour.', 'Actualisez avec F5. Si le site ne répond plus, relancez Comptes.bat.'),
       faq('Comment changer de port ?', 'Lancez le serveur avec la variable PORT (ex. PORT=4000 node server.mjs).'),
     ]],
+    ['immo', '🏗️', 'Projet VEFA', [
+      fig('immo', "Le projet VEFA : indicateurs, verdict sur le prêt relais, synthèse et points d’attention."),
+      h('p', {}, 'Le menu ', b('Immobilier'), ' pilote l’acquisition d’un bien en VEFA (vente en l’état futur d’achèvement). La page ', b('Projet VEFA'), ' est le récapitulatif : coût du projet, financements, épargne mobilisée, bandeau « prêt relais nécessaire ou non » (avec montant et dates), synthèse des paramètres en lecture seule et principaux points d’attention.'),
+      p2('Les boutons de la page ouvrent les Paramètres (saisie), le Planning et simulation et le Plan d’actions.'),
+    ]],
+    ['immo-params', '⚙️', 'Paramètres', [
+      fig('immo-params', "Les paramètres : projet et frais, appels de fonds et épargne côte à côte."),
+      h('p', {}, 'La page ', b('Paramètres'), ' regroupe toutes les zones de saisie du projet ; chaque modification est enregistrée automatiquement (un projet d’exemple est proposé au premier affichage).'),
+      ul([b('Le projet'), ' : prix TTC, date de référence (situation de départ), signature de l’acte, début de chantier, livraison.'],
+        [b('Frais annexes'), ' : notaire, dossier, garantie… (non financés par les prêts : payés par l’épargne ou le relais).'],
+        [b('Appels de fonds'), ' : étapes du chantier avec pourcentage, date et statut ; le bouton « Calendrier légal usuel » propose 5 / 35 / 70 / 95 / 100 % cumulés, dates calculées à partir du chantier.'],
+        [b('Épargne'), ' : sources (importables depuis vos comptes d’épargne), épargne mensuelle dédiée, réserve de sécurité à ne pas entamer.'],
+        [b('Financements externes'), ' : prêt principal, PTZ, autres prêts ; ordre d’utilisation (apport d’abord ou prêts d’abord) et intérêts intercalaires.'],
+        [b('Prêt relais'), ' : montant, taux, durée (24 mois par défaut), début pendant le projet, déblocage selon les besoins ou en une fois, intérêts payés ou capitalisés ; bien actuel à vendre (valeur, capital restant dû).'],
+        [b('Fonds supplémentaires'), ' : vente, don, prime, héritage… ; une opération cochée « rembourse le relais » solde le relais à sa date.']),
+      p2('Saisie dans les tableaux : chaque modification est enregistrée immédiatement, mais les calculs, le bandeau et les graphiques ne se mettent à jour qu’une fois la ligne terminée (quand le curseur quitte la ligne, la ligne en cours est surlignée). On peut ainsi remplir tous les champs d’une ligne sans que l’écran ne bouge.'),
+      tip('Les montants sont des estimations pour piloter votre trésorerie : ils ne remplacent ni l’offre de prêt ni les appels de fonds du promoteur.'),
+    ]],
+    ['immo-planning', '🗓️', 'Planning et simulation', [
+      fig('immo-planning', "Le planning : épargne disponible, financement de chaque échéance et simulation « et si »."),
+      p2('Le planning calcule, à chaque échéance (appel de fonds, frais, vente, échéance du relais), les fonds disponibles et la façon de payer : épargne d’abord, puis prêts, puis prêt relais si nécessaire. Un bandeau indique si le prêt relais est NÉCESSAIRE, le montant maximum à débloquer, la date du premier déblocage et celle du remboursement.'),
+      ul('Lignes orange : prêt relais à débloquer (montant exact à demander à la banque) ; lignes rouges : fonds insuffisants.', 'Quatre graphiques : financement de chaque échéance, épargne/prêts/relais dans le temps, appels de fonds cumulés, calendrier des phases.', [b('Simulation « et si »'), ' (non enregistrée) : décaler la vente du bien actuel, faire varier l’épargne mensuelle ou le montant du relais ; « Appliquer au projet » valide le scénario.'], [b('Intérêts de l’épargne'), ' : calculés par quinzaine échue (sur le solde le plus bas de chaque quinzaine, donc après paiement des frais annexes et des appels de fonds) et crédités une seule fois par an, le 31 décembre, sur une ligne verte du planning. Les intérêts des prêts et du relais restent payés chaque mois.'], [b('Épargne disponible par ligne'), ' : chaque ligne affiche l’épargne reprise de la ligne précédente, + l’épargne mensuelle dédiée versée entre-temps (nombre de mois × montant), ± intérêts et charges, = épargne avant l’échéance, puis la part utilisable hors réserve. Cochez « Afficher aussi chaque versement d’épargne mensuelle » pour voir chaque mois.'], 'Colonnes colorées : vert = épargne disponible, bleu = financement de l’échéance, violet = situation après l’échéance ; le tableau est compact et les graphiques sont affichés deux par deux.', 'Les points d’attention signalent les manques de fonds, l’entame de la réserve et un relais non soldé à son échéance.', [b('Dossier PDF'), ' : synthèse, appels de fonds, planning détaillé et trois graphiques (financement de chaque échéance, épargne / prêts / relais dans le temps, calendrier du projet), à présenter à la banque.']),
+    ]],
+    ['immo-suivi', '📈', 'Suivi du projet', [
+      fig('immo-suivi', "Le suivi : paiement du prix, appels de fonds prévus et payés, statuts colorés."),
+      p2([b('Présentation'), ' : anneau du paiement du prix (payé, appelé, reste), courbe prévu / payé, graphique prévu et réel par étape, anneau des frais annexes, lignes colorées selon le statut (vert payé, orange appelé, rouge échéance dépassée), jauge d’utilisation du prêt relais et comparaison épargne réelle / prévue.']),
+      ul('Passez chaque appel de fonds en « Appelé » puis « Payé » et saisissez le montant et la date réels : le suivi affiche l’avancement, le reste à payer, la prochaine échéance et l’écart avec le prévu.', 'Le graphique compare les appels prévus et payés (cumul).', 'Si vos comptes d’épargne sont liés au projet, le suivi compare le solde réel à l’épargne prévue par la simulation (en avance ou en retard sur le plan).', 'Suivez aussi le prêt relais réellement débloqué (montant, dates) et le règlement des frais annexes.'),
+      p2([b('Tâches et plan d’actions'), ' : la carte « Tâches et plan d’actions » affiche l’avancement du plan, les actions en retard ou à venir (cochez pour marquer « fait », changez le statut) et permet d’ajouter une tâche en une ligne.']),
+      tip('Après des paiements réels, mettez à jour la date de référence et l’épargne de départ du projet pour que la simulation reparte de la situation actuelle.'),
+    ]],
+    ['immo-actions', '✅', 'Plan d’actions', [
+      fig('immo-actions', "Le plan d’actions : répartition, avancement par phase, échéances, tâches et priorités."),
+      fig('immo-gantt', "Le diagramme de Gantt avec les dépendances entre tâches (flèches) et la ligne « aujourd’hui »."),
+      p2([b('Tableau de bord'), ' : répartition des actions (faites, en cours, à faire, en retard), avancement par phase, échéances par mois, calendrier des phases et liste « À traiter en priorité » (cochez pour terminer). Chaque phase a sa couleur, et chaque action une pastille d’échéance (« dans 12 j », « retard de 5 j »).']),
+      p2([b('Dépendances et délais entre tâches'), ' : ouvrez une tâche (✏️), indiquez sa durée en jours (0 = jalon) puis ajoutez des dépendances : « commence après la fin de … » ou « se termine avant le début de … », avec un délai minimal en jours. Les contraintes apparaissent sous chaque tâche (⇥ après, ⇤ avant, ⛓ conditionne ; vert/bleu = respectée, orange = en attente de la tâche précédente, rouge = non respectée avec le nombre de jours manquants). Les boucles (A attend B qui attend A) sont refusées. Le bouton « Recaler les dates selon les contraintes » propose les nouvelles dates avant de les appliquer.']),
+      p2([b('Diagramme de Gantt'), ' : la carte « Contraintes entre tâches et diagramme de Gantt » trace chaque tâche (barre = durée, losange = jalon, couleur = statut) avec des flèches entre tâches liées (rouges si la contrainte n’est pas respectée, en pointillés pour « avant ») et la ligne « aujourd’hui ». Une case permet de n’afficher que les tâches liées.']),
+      p2([b('Plan en PDF'), ' : indicateurs, points de vigilance (actions en retard, tâches prioritaires imminentes), graphiques (répartition par statut, avancement par phase, échéances par mois empilées), le diagramme de Gantt avec les contraintes et leur tableau (marge, état), puis le plan détaillé phase par phase avec statut coloré, échéance, délai (« dans 12 j », « retard de 5 j ») et notes ; les lignes en retard sont en rouge, les faites en vert, les prioritaires en orange. Chaque phase est gardée d’un seul tenant : si son tableau ne tient pas dans le bas de la page, il passe en entier sur la page suivante (sauf s’il dépasse une page entière). Orientation, format et graphiques se choisissent avant la génération.']),
+      p2([b('Ajouter vos propres tâches'), ' : la ligne « ＋ Tâche » en haut de page crée une tâche (libellé, phase, échéance, priorité) en un clic ou avec Entrée. Elle rejoint le plan par phase (par défaut « Tâches personnelles »), est repérée par le badge « ma tâche », apparaît dans le Suivi, la frise des phases et le PDF, et n’est jamais écrasée quand vous mettez à jour le plan.']),
+      ul([b('Générer le plan d’actions'), ' crée automatiquement les étapes du projet à partir des dates, des appels de fonds et de la simulation : dossier de financement, accords de prêt (relais au plus tard 3 mois avant son début), mise en vente, signature, chaque appel de fonds (montant et relais à débloquer), pré-livraison (OPR), remise des clés, réserves, garanties, budget après livraison.'],
+        'Les actions sont regroupées par phase, avec avancement, alertes « en retard » et frise des phases (la ligne bleue indique aujourd’hui).', 'Cochez une action pour la marquer faite ; ajoutez ou modifiez vos propres actions. « Mettre à jour le plan » recale les dates des actions automatiques non faites, sans toucher aux vôtres.', [b('Plan en PDF'), ' pour l’imprimer ou le partager.']),
+    ]],
+    ['immo-ai', '🧠', 'Analyse IA du projet', [
+      fig('immo-ai', "L’analyse IA du projet : score de santé, origine des fonds, points de vigilance."),
+      p2([b('Tableau de bord'), ' : en haut de page, un score de santé du financement (jauge de 0 à 100 avec les facteurs en cause), un anneau de l’origine des fonds (épargne, intérêts, prêts, relais, fonds supplémentaires, manque) et un graphique de l’épargne restante après chaque échéance (rouge = manque). Le résultat de l’IA est présenté en sections colorées : synthèse, points forts, vigilance (alertes rouges et orange), relais, recommandations, scénarios.']),
+      p2('Cette page demande à l’IA d’évaluer votre projet VEFA : faisabilité du financement, nécessité et coût du prêt relais, risques (vente tardive, manque de fonds, réserve entamée), recommandations, questions à poser à la banque et scénarios à tester.'),
+      ul('Choisissez l’axe : analyse globale, prêt relais, risques ou plan d’actions, puis « Lancer l’analyse IA ».', 'Seules les données chiffrées du projet et de la simulation sont transmises (aucun nom, adresse ni compte) ; « Aperçu de ce qui sera envoyé » montre le contenu exact.', 'Avec un fournisseur en ligne, cochez l’autorisation d’envoi ; avec Ollama / LM Studio, rien ne quitte votre ordinateur.', 'Sans IA configurée, « Analyse locale rapide » produit une lecture automatique de la simulation.', 'Le résultat se copie ou s’exporte en PDF, et les analyses sont conservées dans l’historique de la page.'),
+      tip('L’analyse est une aide à la décision : elle ne remplace ni l’offre de prêt, ni l’avis de votre banque ou d’un professionnel.'),
+    ]],
     ['ai', '🔌', 'Paramètres IA', [
+      fig('ai', "Les paramètres IA : fournisseurs locaux, gratuits en ligne et payants."),
       h('p', {}, 'Cette page choisit le fournisseur d’intelligence artificielle utilisé par ', link('Analyse IA', 'analyse'), ' : Anthropic (Claude), un service compatible OpenAI, l’analyse locale sans IA — ou l’une des offres gratuites : en local (Ollama, LM Studio) ou en ligne avec une clé gratuite (Google Gemini, Groq, OpenRouter, Mistral, Cerebras, GitHub Models, Hugging Face). Chaque fournisseur indique ses modèles conseillés (un clic les sélectionne) et le lien pour obtenir la clé.'),
       ul('Renseignez la clé API, le modèle et, si besoin, l’adresse du service ; le bouton « Tester la connexion » vérifie le paramétrage.', 'La clé est stockée sur votre ordinateur (data/secrets.json), hors des sauvegardes ; elle peut aussi venir de la variable COMPTES_AI_KEY du fichier .env.'),
       p2('Avec Ollama ou LM Studio, la page détecte le service local, liste les modèles installés (un clic en choisit un) et, pour Ollama, propose de télécharger un modèle avec une barre de progression. Une erreur 404 signifie en général que le modèle choisi n’est pas installé : l’application l’indique désormais clairement et propose de télécharger ou d’utiliser un modèle déjà présent.'),
@@ -193,7 +276,7 @@ function pageDocs(v) {
     ]],
     ['docs', '📘', 'Documentation', [
       h('p', {}, 'Ce mode d’emploi suit l’organisation de la barre latérale : les chapitres correspondent aux menus (dans leur ordre actuel et avec leurs libellés personnalisés), les sections aux entrées de chaque menu. Les chapitres « Généralités » et « Annexes » regroupent les sujets transversaux.'),
-      ul('Le sommaire à gauche est hiérarchique : chapitres et sections numérotés (1, 1.1, 1.2…).', [b('Exporter en PDF'), ' produit le même plan avec une table des matières à deux niveaux, cliquable, avec numéros de page.']),
+      ul('Le sommaire à gauche est hiérarchique : chapitres et sections numérotés (1, 1.1, 1.2…).', [b('Exporter en PDF'), ' produit le même plan avec une table des matières à deux niveaux, cliquable, avec numéros de page ; un titre n’est jamais seul en bas de page : le texte, le graphique, l’image ou le tableau qui le suit immédiatement reste sur la même page (le dossier PDF du planning tient son tableau « Planning : fonds disponibles et financement » sur une seule page, la police étant réduite si besoin).']),
       tip('Si vous réorganisez les menus (page Affichage des menus), la documentation et son PDF suivent automatiquement le nouvel ordre.'),
     ]],
   ];
@@ -217,7 +300,8 @@ function pageDocs(v) {
     chapters.map((ch, i) => h('div', { class: 'tocch' }, h('a', { class: 'toc1', href: '#/docs', onclick: go('docch-' + i) }, `${i + 1}. ${ch.icon} ${ch.title}`),
       ch.items.map((it, j) => h('a', { class: 'toc2', href: '#/docs', onclick: go('doc-' + it.id) }, `${i + 1}.${j + 1} ${it.icon} ${it.title}`)))));
   const body = h('div', { class: 'docbody' },
-    h('div', { class: 'card dochero' }, h('div', { style: { fontSize: '40px' } }, '📘'), h('div', {}, h('h2', { style: { fontSize: '22px', margin: '0 0 4px' } }, 'Mode d’emploi'), h('div', { class: 'muted' }, 'Tout ce qu’il faut savoir pour suivre vos comptes, classer vos dépenses et préparer votre budget.')), h('div', { style: { marginLeft: 'auto' } }, pdfBtn('📄 Exporter en PDF', exportDocsPdf))),
+    h('div', { class: 'card dochero' }, h('div', { style: { fontSize: '40px' } }, '📘'), h('div', {}, h('h2', { style: { fontSize: '22px', margin: '0 0 4px' } }, 'Mode d’emploi'), h('div', { class: 'muted' }, 'Tout ce qu’il faut savoir pour suivre vos comptes, classer vos dépenses, préparer votre budget et piloter un projet immobilier.'), h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' } }, '📷 Les copies d’écran utilisent des données fictives ; cliquez sur une image pour l’agrandir.')), h('div', { style: { marginLeft: 'auto' } }, pdfBtn('📄 Exporter en PDF', exportDocsPdf))),
+    h('div', { class: 'docsteps' }, [['1', '📥', 'Importez', 'Déposez vos relevés PDF (ou saisissez des comptes à la main).', 'import'], ['2', '🏷️', 'Classez', 'Vérifiez les catégories et créez vos règles.', 'categories'], ['3', '📊', 'Analysez', 'Tableau de bord, statistiques, comparaisons.', 'dashboard'], ['4', '🔮', 'Prévoyez', 'Budget de l’année suivante, rapports PDF.', 'forecast'], ['5', '💾', 'Protégez', 'Sauvegardes programmées et versions.', 'backups']].map(([n, ico, t, d, id]) => h('a', { class: 'docstep', href: '#/docs', onclick: go('doc-' + id) }, h('span', { class: 'sn' }, n), h('b', {}, ico + ' ' + t), h('span', { class: 'muted' }, d)))),
     chapters.map((ch, i) => h('section', { class: 'docchapter', id: 'docch-' + i, 'data-num': String(i + 1), 'data-title': ch.title },
       h('h2', { class: 'chtitle' }, h('span', { class: 'num' }, i + 1), `${ch.icon} ${ch.title}`),
       ch.items.map((it, j) => h('section', { class: 'card doc', id: 'doc-' + it.id, 'data-num': `${i + 1}.${j + 1}`, 'data-title': it.title }, h('h3', {}, h('span', { class: 'num' }, `${i + 1}.${j + 1}`), `${it.icon} ${it.title}`), byId.get(it.id)[3])))));
