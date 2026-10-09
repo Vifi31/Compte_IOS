@@ -137,12 +137,7 @@ function analysisToPdf(entry, D) {
     blocks.push({ t: 'vbars', height: 150, labels: D.par_mois.map(m => D.par_mois.length > 12 ? m.mois.slice(5) + '/' + m.mois.slice(2, 4) : monthLabel(m.mois)), series: [
       { name: 'Revenus', color: '#10b981', data: D.par_mois.map(m => m.revenus) }, { name: 'Dépenses', color: '#ef4444', data: D.par_mois.map(m => m.depenses) }] });
   }
-  for (const raw of entry.text.replace(/\r/g, '').split('\n')) {
-    const l = raw.trim(); if (!l) continue; let m;
-    if ((m = l.match(/^#{1,4}\s+(.*)$/))) blocks.push({ t: 'h2', text: m[1].replace(/\*\*/g, '') });
-    else if ((m = l.match(/^[-*•]\s+(.*)$/))) blocks.push({ t: 'p', text: '•  ' + m[1].replace(/\*\*|`/g, ''), indent: 12 });
-    else blocks.push({ t: 'p', text: l.replace(/^>\s?/, '').replace(/\*\*|`/g, '') });
-  }
+  blocks.push(...mdToPdfBlocks(entry.text));
   return { title: 'Analyse des dépenses et revenus', file: 'analyse', subtitle: `${entry.meta?.comptes ?? ''} · ${entry.meta?.periode ?? ''} · ${entry.kind === 'ia' ? 'IA ' + (entry.model || entry.provider) : 'analyse locale'}`, blocks };
 }
 
