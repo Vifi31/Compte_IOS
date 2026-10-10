@@ -381,3 +381,61 @@ tr.rowpaid td { background: color-mix(in srgb, #10b981 9%, var(--card)); } tr.ro
 .tdroute { display: flex; gap: 8px; align-items: center; font-size: 12.5px; padding: 2px 0; } .tdroute code { font-family: Consolas, monospace; } .tdroute small { margin-left: auto; color: var(--muted); font-size: 11px; }
 .tdroute .meths { display: inline-flex; gap: 3px; min-width: 96px; } .tdroute .meths i { font-style: normal; font-size: 9.5px; font-weight: 700; color: #fff; padding: 1px 5px; border-radius: 5px; }
 @media (max-width: 760px) { .tdbar { grid-template-columns: 120px 1fr 70px; } }
+
+/* ============ Biens immobiliers (liste, fiche, estimations) ============ */
+.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.bcard { position: relative; display: flex; flex-direction: column; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 14px; box-shadow: var(--shadow); transition: .15s; }
+.bcard:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--bc, var(--primary)) 55%, var(--line)); }
+.bhead { display: flex; align-items: center; gap: 12px; }
+.bico { width: 46px; height: 46px; display: grid; place-items: center; font-size: 24px; border-radius: 13px; background: color-mix(in srgb, var(--bc, var(--primary)) 20%, transparent); flex: none; }
+.bname { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; }
+.bname .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bname .badge { flex: none; font-weight: 600; }
+.bhead .muted { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bvals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bvals > div { background: var(--card2); border-radius: 11px; padding: 8px 10px; min-width: 0; }
+.bvals .tl { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bvals .tv { font-weight: 700; font-size: 14.5px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bvals .ts { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bfoot { display: flex; gap: 8px; align-items: center; margin-top: auto; }
+.bfoot .btn, .bfoot .btn.sm { flex: none; }
+.dropzone.hover { border-color: var(--primary); background: var(--card2); }
+.dropzone b { color: var(--primary); }
+.dropzone small { font-size: 11.5px; color: var(--muted); }
+tr.editing { background: color-mix(in srgb, var(--primary) 9%, transparent); }
+tr.rowshort td { background: color-mix(in srgb, var(--bad) 7%, transparent); }
+tr.rowcalled td { background: color-mix(in srgb, var(--warn, #f59e0b) 9%, transparent); }
+tr.rowpaid td { background: color-mix(in srgb, var(--good) 7%, transparent); }
+.bvals .tv.neg { color: var(--bad); } .bvals .tv.pos { color: var(--good); }
+.bchip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--card2); }
+@media (max-width: 760px) { .bgrid { grid-template-columns: 1fr; } .bvals { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Import de PDF des biens */
+.impfile{border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:12px 14px;margin-top:12px;background:var(--card,#fff)}
+.imphead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.impitem{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line,#e2e8f0)}
+.impitem.off{opacity:.55}
+.impck{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:16px;cursor:pointer;min-width:46px}
+.impfields{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+
+.implearn{border:1px dashed var(--line,#cbd5e1);border-radius:10px;padding:10px 12px;margin-top:8px;background:rgba(99,102,241,.04)}
+.implrow{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:3px 8px;border-bottom:1px solid var(--line,#eef2f7);font-size:12.5px}
+.implrow .impltxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.implrow .implbtn{display:flex;gap:4px;flex:none}
+.implrow .implbtn .chip{padding:1px 8px;font-size:11px}
+.implrow .implbtn .chip.on{background:#6366f1;color:#fff}
+
+/* lignes de dépenses exclues ou supprimées */
+tr.rowexcl td{opacity:.5;text-decoration:line-through}
+tr.rowexcl td:first-child,tr.rowexcl td:last-child{text-decoration:none}
+
+/* Tableaux : tri, filtres par colonne et pagination (tables.js) */
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{color:var(--primary,#6366f1)}
+.tsort{margin-left:4px;font-size:10px;opacity:.75}
+tr.tfilter th{padding:3px 6px;background:transparent;position:static}
+tr.tfilter input{width:100%;min-width:56px;padding:3px 6px;font-size:12px;border-radius:6px}
+.tblbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;margin:6px 0 12px}
+.tblbar select{padding:2px 6px;font-size:12px}
+
+mark{background:#fde68a;color:inherit;border-radius:3px;padding:0 2px}

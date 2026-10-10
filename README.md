@@ -28,6 +28,7 @@ Application locale de gestion des dépenses, alimentée par les relevés PDF *La
 - **Modèle** : export/import d'un paramétrage réutilisable sans données personnelles.
 - **Exports PDF** (boutons rouge/orange) des pages Prompt, Versions, Documentation (avec table des matières cliquable et pagination), Licence et Manifeste.
 - **Immobilier (VEFA)** : récapitulatif du projet, page Paramètres (toutes les saisies : appels de fonds, épargne, prêts, prêt relais, fonds supplémentaires), planning avec fonds disponibles à chaque appel et déblocages du relais, simulation « et si », suivi réel/prévu, plan d'actions, dossier PDF.
+- **Bien Immobiliers** : gestion multi-biens (appartement, maison, terrain…) avec fiche (rendement), rattachement des dépenses par catégorie, mot-clé ou choix manuel, documents PDF par bien (`Documents/Biens/`), dépenses et statistiques par mois, trimestre ou année (totaux, cumuls, répartition par catégorie, comparaison entre biens), estimation de valeur mini/centre/maxi à partir des ventes réelles DVF (data.gouv.fr) avec ajustements par caractéristiques, historique, aperçu IA facultatif et dossiers PDF.
 - **Documentation** : mode d'emploi intégré, structuré comme la barre latérale (chapitres = menus, sections = entrées, ordre et libellés actuels), PDF avec table des matières à deux niveaux.
 - **Comptes** : ajout de comptes manuels (autre banque, espèces, carte) avec saisie d’opérations ; soldes et courbe d'évolution de chaque compte (courants et épargne).
 

@@ -1,6 +1,6 @@
 {
   "name": "comptes",
-  "version": "2.1.6",
+  "version": "2.4.15",
   "description": "Gestion des dépenses à partir des relevés La Banque Postale",
   "scripts": {
     "start": "node server.mjs",

@@ -1,5 +1,77 @@
 # Journal des modifications
 
+## 2.4.15 — 2026-10-10
+- Fiche du bien : revenus intégrés aux opérations rattachées ; coût net, rendement brut/net et cash-flow
+
+## 2.4.14 — 2026-10-10
+- Estimation : année en cours interrogée (DVF 2026 pas encore publié), nouvelle tentative automatique
+
+## 2.4.13 — 2026-10-10
+- Estimation : rayon de surface 0 %, 5 %, 10 %, 15 %
+
+## 2.4.12 — 2026-10-10
+- Statistiques des biens : revenus locatifs, résultat net et cumul par période, par bien et dans les PDF
+
+## 2.4.11 — 2026-10-10
+- Investissement locatif : catégories de revenus rattachées au bien, revenus, rendement réel et résultat net
+
+## 2.4.10 — 2026-10-10
+- Estimation : localisation du bien, estimations par rayon (300 m à 5 km) et affinage au quartier
+
+## 2.4.9 — 2026-10-10
+- Gestion documentaire : bibliothèque, documents non affectés, affectation à un bien, qualification, sélection et actions groupées, catégories
+
+## 2.4.8 — 2026-10-10
+- Biens : corpus documentaire (index plein texte des PDF) ; tri, filtre et nombre de lignes sur tous les tableaux des biens et des dépenses
+
+## 2.4.7 — 2026-10-10
+- Tableaux : tri et filtre par colonne, nombre de lignes affichées
+
+## 2.4.6 — 2026-10-10
+- Documents du bien : correction du changement de nature ; libellés de nature modifiables
+
+## 2.4.5 — 2026-10-10
+- Fiche du bien : correction de la carte des opérations rattachées (variable manquante)
+
+## 2.4.4 — 2026-10-10
+- Gestion de bien : catégories des opérations mémorisées, lignes de dépenses sélectionnables, exclues ou supprimées
+
+## 2.4.3 — 2026-10-09
+- Biens : correction du rattachement manuel des opérations bancaires (identifiants de 44 caractères rejetés)
+
+## 2.4.2 — 2026-10-09
+- Import PDF : mode apprentissage (montant, fonds travaux, libellé) avec règles mémorisées et gérées
+
+## 2.4.1 — 2026-10-09
+- Nouveau menu « Gestion de bien Immobiliers » : multi-biens, charges, appels de fonds, travaux, PDF avec analyse IA, registre et statistiques des dépenses, estimation mini/maxi DVF
+
+## 2.4.0 — 2026-10-09
+- Suppression du menu et du module Bien Immobiliers (pages, API, documentation). Les données ne sont pas effacées.
+
+## 2.3.1 — 2026-10-09
+- Fiche du bien : suppression multiple de documents ; import PDF : quote-part prioritaire
+
+## 2.3.0 — 2026-10-09
+- Biens immobiliers : nouveau registre des dépenses (charges, appels de fonds, travaux) avec cumuls par période, import PDF/IA et analyse
+
+## 2.2.5 — 2026-10-09
+- Import PDF : ligne proposée même sans détection ; Dépenses et analyses : dépenses importées + analyse locale/IA
+
+## 2.2.4 — 2026-10-09
+- Estimation : rayon de surface 0 % par défaut ; import PDF : IA cochée par défaut
+
+## 2.2.3 — 2026-10-09
+- Import PDF : seul « Le montant de votre appel » est repris quand il est présent
+
+## 2.2.2 — 2026-10-09
+- Import PDF : quote-part des charges ; Estimation du bien : page de nouveau opérationnelle (recherche des ventes DVF)
+
+## 2.2.1 — 2026-10-09
+- Import PDF : prix TTC du devis ou de la facture repéré en priorité (HT + TVA en secours)
+
+## 2.2.0 — 2026-10-09
+- Biens immobiliers : import de PDF (charges, appels de fonds, travaux) avec analyse automatique et validation avant ajout
+
 ## 2.1.6 — 2026-10-07
 - Filtre de période : choix d'une année entière existante (Année 2025, Année 2024…) en plus des mois, des 3/6/12 derniers mois et de l'année en cours ; valable pour Catégories, tableau de bord, opérations, statistiques, rapports
 

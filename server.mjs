@@ -7,6 +7,7 @@ import { parseAll, parseStatement, RELEVES_DIR } from './scripts/parse.mjs';
 import { enrich, categorize, DEFAULT_CATEGORIES, DEFAULT_RULES } from './lib/enrich.mjs';
 import { setupExtra } from './lib/extra.mjs';
 import { manualData, setupManual } from './lib/manual.mjs';
+import { setupBiens } from './lib/biens.mjs';
 import { setupFeatures, licenseBrief } from './lib/features.mjs';
 import { collectTechInfo } from './lib/techinfo.mjs';
 
@@ -110,6 +111,7 @@ const extra = setupExtra({
 });
 
 const features = setupFeatures({ root: ROOT, getStore: () => store, saveStore });
+const biens = setupBiens({ getStore: () => store, saveStore, askAI: features.askAI });
 const manual = setupManual({ getStore: () => store, saveStore, state: () => buildState() });
 
 async function api(req, res, url) {
@@ -117,6 +119,7 @@ async function api(req, res, url) {
   if (await extra(req, res, url, { json, readBody })) return;
   if (await manual(req, res, url, { json, readBody })) return;
   if (await features(req, res, url, { json, readBody })) return;
+  if (await biens(req, res, url, { json, readBody })) return;
   if (p === '/api/ping' && m === 'GET') return json(res, 200, { ok: true, app: 'Comptes', version: currentVersion(), installed: INSTALLED, home: HOME });
   if (p === '/api/shutdown' && m === 'POST') { json(res, 200, { ok: true }); setTimeout(() => process.exit(0), 200); return; }
   if (p === '/api/state' && m === 'GET') return json(res, 200, buildState());

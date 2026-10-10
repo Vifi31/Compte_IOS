@@ -5,10 +5,13 @@ const NAV_GROUPS = [
   { id: 'analyse', label: 'Analyse', icon: '🧠', items: [['analyse', '🧠', 'Analyse IA'], ['ai', '🔌', 'Paramètres IA']] },
   { id: 'data', label: 'Gestion Données', icon: '🗂️', items: [['categories', '🏷️', 'Catégories'], ['accounts', '🏦', 'Comptes'], ['statements', '🗃️', 'Relevés']] },
   { id: 'immo', label: 'Immobilier', icon: '🏗️', items: [['immo', '🏗️', 'Projet VEFA'], ['immo-params', '⚙️', 'Paramètres'], ['immo-planning', '🗓️', 'Planning et simulation'], ['immo-suivi', '📈', 'Suivi'], ['immo-actions', '✅', 'Plan d’actions'], ['immo-ai', '🧠', 'Analyse IA']] },
+  { id: 'biens', label: 'Gestion de bien Immobiliers', icon: '🏘️', items: [['biens', '🏘️', 'Mes biens'], ['bien', '🏠', 'Fiche du bien', true], ['biens-docs', '🗂️', 'Gestion documentaire'], ['biens-stats', '📊', 'Dépenses et statistiques'], ['biens-estimation', '🧮', 'Estimation de valeur']] },
   { id: 'admin', label: 'Administration', icon: '⚙️', items: [['backups', '💾', 'Sauvegardes'], ['versions', '🏷️', 'Versions'], ['prompts', '📜', 'Prompt'], ['license', '©️', 'Licence'], ['manifest', '📋', 'Manifeste'], ['model', '🧬', 'Modèle'], ['techdocs', '🛠️', 'Documentation technique'], ['menus', '🎛️', 'Affichage des menus', true]] },
   { id: 'help', label: '', items: [['docs', '📘', 'Documentation']] },
 ];
 const menuCfg = () => ({ hidden: [], order: {}, groupOrder: [], labels: {}, icons: {}, moves: {}, customGroups: [], ...(S.data?.menu ?? {}) });
+// Pages décrites dans NAV_GROUPS pour les titres / fil d'Ariane, mais jamais affichées dans la barre latérale (pages de détail).
+const NAV_HIDDEN = ['bien'];
 const rank = (list, id) => { const i = (list ?? []).indexOf(id); return i < 0 ? 1000 : i; };
 
 /** Structure effective du menu : groupes de base + groupes créés, entrées déplacées, libellés personnalisés. */
@@ -27,7 +30,7 @@ function navModel(cfg = menuCfg()) {
   groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   return groups;
 }
-const itemHidden = (it, cfg) => !it.locked && cfg.hidden.includes(it.id);
+const itemHidden = (it, cfg) => NAV_HIDDEN.includes(it.id) || (!it.locked && cfg.hidden.includes(it.id));
 const groupHidden = (g, cfg) => !g.locked && cfg.hidden.includes('g:' + g.id);
 function navLookup(id) { for (const g of navModel()) { const it = g.items.find(i => i.id === id); if (it) return { item: [it.id, it.icon, it.label], group: g }; } return null; }
 
@@ -40,7 +43,7 @@ function renderNav() {
     const items = g.items.filter(it => !itemHidden(it, cfg));
     if (!items.length) continue;
     if (!g.label) { items.forEach(it => nav.append(link(it))); continue; }
-    const hasActive = items.some(it => it.id === S.page), isOpen = open[g.id] ?? hasActive;
+    const hasActive = g.items.some(it => it.id === S.page), isOpen = open[g.id] ?? hasActive;
     nav.append(h('div', { class: 'navgroup' + (isOpen ? ' open' : '') },
       h('button', { class: 'navhead' + (hasActive ? ' has-active' : ''), onclick: () => { open[g.id] = !isOpen; localStorage.setItem('navOpen', JSON.stringify(open)); renderNav(); } },
         h('span', { class: 'ico' }, g.icon || '📁'), g.label, h('span', { class: 'chev' }, '▸')),
@@ -88,7 +91,7 @@ function pageMenus(v) {
   const destinations = model.map(g => [g.id, g.label || (g.id === 'main' ? 'Menus principaux (sans groupe)' : 'Aide (sans groupe)')]);
   v.append(h('div', { class: 'grid g2' }, ...model.map(g => {
     const gh = groupHidden(g, cfg), ids = g.items.map(i => i.id);
-    const rows = g.items.map(it => h('div', { class: 'menurow' + (itemHidden(it, cfg) || gh ? ' off' : ''), style: { flexWrap: 'wrap' } },
+    const rows = g.items.filter(it => !NAV_HIDDEN.includes(it.id)).map(it => h('div', { class: 'menurow' + (itemHidden(it, cfg) || gh ? ' off' : ''), style: { flexWrap: 'wrap' } },
       iconIn('ic:' + it.id, it.icon, it.defIcon, val => setIcon(it.id, val, it.defIcon)),
       textIn('lb:' + it.id, it.label, it.defLabel, val => setText(it.id, val, it.defLabel), '140px'),
       it.locked ? h('span', { class: 'badge' }, '🔒 fixe') : null,

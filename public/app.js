@@ -144,7 +144,7 @@ function catSelect(value, onchange, { kinds, none } = {}) {
 // ============ Filtres globaux ============
 function renderFilters() {
   const f = $('#filters'); f.innerHTML = '';
-  if (['docs', 'backups', 'menus', 'versions', 'prompts', 'license', 'ai', 'analyse', 'manifest', 'model', 'immo', 'immo-params', 'immo-planning', 'immo-suivi', 'immo-actions', 'immo-ai', 'techdocs'].includes(S.page)) return;
+  if (['docs', 'backups', 'menus', 'versions', 'prompts', 'license', 'ai', 'analyse', 'manifest', 'model', 'immo', 'immo-params', 'immo-planning', 'immo-suivi', 'immo-actions', 'immo-ai', 'techdocs', 'biens', 'bien', 'biens-estimation', 'biens-docs'].includes(S.page)) return;
   const accSel = h('select', { onchange: e => { S.scope = e.target.value; localStorage.setItem('scope', S.scope); S.of.sel.clear(); render(); } },
     h('option', { value: 'courants' }, '💳 Comptes courants'), h('option', { value: 'tous' }, '🏦 Tous les comptes'),
     S.data.accounts.map(a => h('option', { value: a.number }, `${accIcon(a.type)} ${accName(a)}`)));
@@ -508,7 +508,7 @@ function renameAccount(a) {
 }
 
 // ============ Routage ============
-const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, immo: pageImmo, 'immo-params': pageImmoParams, 'immo-planning': pagePlanning, 'immo-suivi': pageSuivi, 'immo-actions': pageActions, 'immo-ai': pageImmoAI, techdocs: pageTechDocs, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
+const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, immo: pageImmo, 'immo-params': pageImmoParams, 'immo-planning': pagePlanning, 'immo-suivi': pageSuivi, 'immo-actions': pageActions, 'immo-ai': pageImmoAI, techdocs: pageTechDocs, biens: pageBiens, bien: pageBien, 'biens-stats': pageBiensStats, 'biens-docs': pageBiensDocs, 'biens-estimation': pageBiensEstimation, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
 function render() {
   const fk = document.activeElement?.dataset?.fk;
   charts.splice(0).forEach(c => c.destroy());

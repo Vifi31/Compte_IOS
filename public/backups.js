@@ -49,7 +49,7 @@ async function pageBackups(v) {
   v.append(scheduleCard(D, reload));
 
   // ---- graphiques + volumes
-  const volRows = [['📄', 'Relevés PDF', V.statements, '#6366f1'], ['🗂️', 'Paramétrage (catégories, règles…)', V.settings, '#ec4899'], ['⚙️', 'Programme', V.program, '#f59e0b'], ['📑', 'Rapports PDF', V.reports, '#10b981']];
+  const volRows = [['📄', 'Relevés PDF', V.statements, '#6366f1'], ['🏠', 'Documents des biens', V.biens ?? { count: 0, size: 0 }, '#0ea5e9'], ['🗂️', 'Paramétrage (catégories, règles…)', V.settings, '#ec4899'], ['⚙️', 'Programme', V.program, '#f59e0b'], ['📑', 'Rapports PDF', V.reports, '#10b981']];
   const maxV = Math.max(1, ...volRows.map(r => r[2].size));
   v.append(h('div', { class: 'grid g2', style: { marginTop: '18px' } },
     h('div', { class: 'card' }, h('h2', {}, 'Ce qui est protégé', h('small', {}, 'volumes actuels')),
