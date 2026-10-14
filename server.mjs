@@ -8,25 +8,52 @@ import { enrich, categorize, DEFAULT_CATEGORIES, DEFAULT_RULES } from './lib/enr
 import { setupExtra } from './lib/extra.mjs';
 import { manualData, setupManual } from './lib/manual.mjs';
 import { setupBiens } from './lib/biens.mjs';
+import { openDb, saveStoreToDb, loadStoreFromDb, markInitialized, setMeta, recordSnapshot } from './lib/db.mjs';
+import { setupDbAdmin } from './lib/dbadmin.mjs';
+import { setupImmoFiles } from './lib/immofiles.mjs';
 import { setupFeatures, licenseBrief } from './lib/features.mjs';
 import { collectTechInfo } from './lib/techinfo.mjs';
 
-import { ROOT, DATA_DIR, PORT as CFG_PORT, HOME, INSTALLED } from './lib/paths.mjs';
+import { ROOT, DATA_DIR, PORT as CFG_PORT, HOME, INSTALLED, BIENS_DIR, IMMO_DIR, REPORTS_DIR, BACKUP_DIR, VERSIONS_DIR } from './lib/paths.mjs';
 const PUBLIC = path.join(ROOT, 'public');
 const DATA = DATA_DIR;
 const STORE_FILE = path.join(DATA, 'store.json');
 const PORT = CFG_PORT;
 fs.mkdirSync(DATA, { recursive: true });
 
-// ---------- Persistance (catégories, règles, corrections manuelles) ----------
-let store;
-function loadStore() {
-  try { store = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8')); } catch { store = null; }
-  if (!store) store = { categories: DEFAULT_CATEGORIES, rules: DEFAULT_RULES, overrides: {}, accountAliases: {}, ruleSeq: 1000 };
+// ---------- Persistance : base SQLite (data/comptes.db) ----------
+// Les données vivent en mémoire (objet store) et sont écrites dans la base à chaque modification (seules les sections changées).
+// data/store.json est conservé comme copie lisible (miroir, écrite peu après chaque modification) : elle alimente les sauvegardes.
+// Si la base est inaccessible, l'application retombe sur store.json écrit aussitôt : aucune donnée n'est perdue.
+const DB_FILE = path.join(DATA, 'comptes.db');
+let db = null, dbError = null;
+try { db = openDb(DB_FILE); } catch (e) { dbError = String(e.message || e); console.error('Base SQLite indisponible, repli sur store.json :', dbError); }
+let store, mirrorTimer = null;
+function writeMirror() { clearTimeout(mirrorTimer); mirrorTimer = null; try { fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 1)); } catch (e) { console.error('Écriture de store.json impossible :', e.message); } }
+function loadStore({ fromJson = false } = {}) {
+  let loaded = null, origin = null;
+  if (db && !dbError && !fromJson) { try { loaded = loadStoreFromDb(db); } catch (e) { dbError = String(e.message || e); console.error('Lecture de la base impossible, repli sur store.json :', dbError); } }
+  if (!loaded) { try { loaded = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8')); origin = fromJson ? 'restauration' : 'store.json'; } catch { loaded = null; } }
+  store = loaded;
+  if (!store) { store = { categories: DEFAULT_CATEGORIES, rules: DEFAULT_RULES, overrides: {}, accountAliases: {}, ruleSeq: 1000 }; origin = 'initial'; }
   store.overrides ??= {}; store.accountAliases ??= {}; store.ruleSeq ??= 1000; store.forecasts ??= {};
+  if (origin && db && !dbError) { // première utilisation de la base, ou restauration : import complet
+    try {
+      if (origin === 'store.json') { const bak = STORE_FILE + '.avant-base'; if (!fs.existsSync(bak)) fs.copyFileSync(STORE_FILE, bak); setMeta(db, 'migrated_from', 'store.json · ' + new Date().toISOString()); }
+      saveStoreToDb(db, store, { force: true }); markInitialized(db, origin);
+    } catch (e) { dbError = String(e.message || e); console.error('Import dans la base impossible :', dbError); }
+  }
   saveStore();
 }
-function saveStore() { fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 1)); }
+function saveStore() {
+  if (db && !dbError) {
+    try { saveStoreToDb(db, store); } catch (e) { dbError = String(e.message || e); console.error('Écriture dans la base impossible, repli sur store.json :', dbError); }
+  }
+  if (!db || dbError) { writeMirror(); return; }
+  clearTimeout(mirrorTimer); mirrorTimer = setTimeout(writeMirror, 1500);
+}
+process.on('exit', () => { if (mirrorTimer) writeMirror(); });
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { if (mirrorTimer) writeMirror(); process.exit(0); });
 loadStore();
 
 // ---------- Données bancaires ----------
@@ -103,7 +130,7 @@ const cleanCat = (c, id) => ({
 });
 
 const extra = setupExtra({
-  root: ROOT, getStore: () => store, saveStore, reloadStore: loadStore, reimport: () => importStatements(),
+  root: ROOT, getStore: () => store, saveStore, reloadStore: loadStore, flushStore: writeMirror, reimport: () => importStatements(),
   getStats: () => ({
     operations: bank?.raw.length ?? 0, categories: store.categories.length, rules: store.rules.length,
     corrections: Object.keys(store.overrides).length, forecasts: Object.keys(store.forecasts).length,
@@ -111,6 +138,9 @@ const extra = setupExtra({
 });
 
 const features = setupFeatures({ root: ROOT, getStore: () => store, saveStore });
+const immoFiles = setupImmoFiles();
+const dbAdmin = setupDbAdmin({ getDb: () => db, getStore: () => store, getError: () => dbError, mirrorFile: STORE_FILE, flush: writeMirror, dirs: { releves: RELEVES_DIR, biens: BIENS_DIR, immo: IMMO_DIR, rapports: REPORTS_DIR, sauvegardes: BACKUP_DIR, versions: VERSIONS_DIR } });
+if (db && !dbError) { const snap = () => { try { recordSnapshot(db); } catch { /* mesure facultative */ } }; snap(); setInterval(snap, 6 * 3600 * 1000).unref(); } // mesure de taille : au démarrage puis toutes les 6 h
 const biens = setupBiens({ getStore: () => store, saveStore, askAI: features.askAI });
 const manual = setupManual({ getStore: () => store, saveStore, state: () => buildState() });
 
@@ -119,6 +149,8 @@ async function api(req, res, url) {
   if (await extra(req, res, url, { json, readBody })) return;
   if (await manual(req, res, url, { json, readBody })) return;
   if (await features(req, res, url, { json, readBody })) return;
+  if (await immoFiles(req, res, url, { json })) return;
+  if (await dbAdmin(req, res, url, { json })) return;
   if (await biens(req, res, url, { json, readBody })) return;
   if (p === '/api/ping' && m === 'GET') return json(res, 200, { ok: true, app: 'Comptes', version: currentVersion(), installed: INSTALLED, home: HOME });
   if (p === '/api/shutdown' && m === 'POST') { json(res, 200, { ok: true }); setTimeout(() => process.exit(0), 200); return; }

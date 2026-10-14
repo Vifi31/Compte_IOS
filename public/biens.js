@@ -181,6 +181,7 @@ async function pageBien(v) {
     ['Commune', b.commune ? b.ville + ' (INSEE ' + b.commune + ')' : (b.ville || '—')],
     ['Caractéristiques', [b.surface ? b.surface + ' m²' : null, b.pieces ? b.pieces + ' pièce(s)' : null, b.terrain ? 'terrain ' + b.terrain + ' m²' : null, b.etage || null, b.annee ? 'construit en ' + b.annee : null].filter(Boolean).join(' · ') || '—'],
     ['État & DPE', [b.etat ? B_ETATS[b.etat] : null, b.dpe ? 'DPE ' + b.dpe : null].filter(Boolean).join(' · ') || '—'],
+    ['Critères d’estimation', critSummary(b).length ? critSummary(b).map(x => x.o.l).join(' · ') : 'aucun renseigné (fiche › Modifier)'],
     ['Atouts', [b.exterieur ? 'extérieur' : null, b.garage ? 'garage' : null, b.ascenseur ? 'ascenseur' : null, b.jardin ? 'jardin' : null].filter(Boolean).join(', ') || '—'],
     ['Achat', b.dateAchat ? `${fdate(b.dateAchat)}${b.prixAchat ? ' · ' + eur0(b.prixAchat) : ''}` : '—'],
     ['Loyer', b.loyerMensuel > 0 ? eur0(b.loyerMensuel) + ' / mois' : 'non loué'],
@@ -288,6 +289,15 @@ let bUpKind = 'autre'; // nature appliquée aux prochains PDF déposés
 function bDocsCard(b) {
   const docs = b.docs ?? [];
   bDocSel = new Set([...bDocSel].filter(n => docs.some(d => d.name === n)));
+  /** Met à jour cases, lignes et boutons sans refaire la page. */
+  const syncSel = () => {
+    const n = bDocSel.size, delBtn = document.querySelector('.bd-del'), selAllBtn = document.querySelector('.bd-all'), headCb = document.querySelector('.bd-head');
+    if (delBtn) { delBtn.disabled = !n; delBtn.style.background = n ? '#dc2626' : ''; delBtn.textContent = '🗑️ Supprimer la sélection' + (n ? ' (' + n + ')' : ''); }
+    if (selAllBtn) selAllBtn.textContent = n === docs.length ? '☐ Tout désélectionner' : '☑ Tout sélectionner';
+    if (headCb) headCb.checked = docs.length > 0 && n === docs.length;
+    document.querySelectorAll('tr[data-n]').forEach(tr => { const on = bDocSel.has(tr.dataset.n); tr.classList.toggle('rowcalled', on); const cb = tr.querySelector('input[type=checkbox]'); if (cb) cb.checked = on; });
+  };
+  const setAllSel = on => { bDocSel = on ? new Set(docs.map(d => d.name)) : new Set(); syncSel(); };
   const input = h('input', { type: 'file', accept: 'application/pdf', multiple: true, style: { display: 'none' }, onchange: e => uploadDocs(b, [...e.target.files]) });
   const dz = h('div', { class: 'dropzone', style: { marginTop: '2px' }, onclick: () => input.click(),
     ondragover: e => { e.preventDefault(); dz.classList.add('hover'); }, ondragleave: () => dz.classList.remove('hover'),
@@ -300,11 +310,11 @@ function bDocsCard(b) {
       .then(r => r.json()).then(j => { if (j.items) BS = j; else toast('⚠️ ' + (j.error || 'Enregistrement impossible')); render(); }).catch(() => toast('⚠️ Enregistrement impossible'));
   };
   const list = docs.length ? h('div', { class: 'tablewrap' }, h('table', {},
-    h('thead', {}, h('tr', {}, h('th', { style: { width: '30px' } }, h('input', { type: 'checkbox', title: 'Tout sélectionner', checked: docs.length > 0 && bDocSel.size === docs.length, onchange: e => { bDocSel = e.target.checked ? new Set(docs.map(d => d.name)) : new Set(); render(); } })), h('th', {}, 'Document'), h('th', {}, 'Nature'), h('th', { class: 'r' }, 'Taille'), h('th', {}, 'Ajouté'), h('th'))),
+    h('thead', {}, h('tr', {}, h('th', { style: { width: '30px' } }, h('input', { type: 'checkbox', title: 'Tout sélectionner', checked: docs.length > 0 && bDocSel.size === docs.length, class: 'bd-head', onchange: e => setAllSel(e.target.checked) })), h('th', {}, 'Document'), h('th', {}, 'Nature'), h('th', { class: 'r' }, 'Taille'), h('th', {}, 'Ajouté'), h('th'))),
     h('tbody', {}, docs.map(d => {
       const url = '/api/biens/' + encodeURIComponent(b.id) + '/documents?name=' + encodeURIComponent(d.name);
-      return h('tr', { class: bDocSel.has(d.name) ? 'rowcalled' : '' },
-        h('td', {}, h('input', { type: 'checkbox', checked: bDocSel.has(d.name), onchange: e => { e.target.checked ? bDocSel.add(d.name) : bDocSel.delete(d.name); render(); } })),
+      return h('tr', { class: bDocSel.has(d.name) ? 'rowcalled' : '', 'data-n': d.name },
+        h('td', {}, h('input', { type: 'checkbox', checked: bDocSel.has(d.name), onchange: e => { e.target.checked ? bDocSel.add(d.name) : bDocSel.delete(d.name); syncSel(); } })),
         h('td', {}, h('b', {}, docKindIcon(d.kind)), ' ', d.name),
         h('td', { style: { width: '170px' } }, h('select', { onchange: e => setKind(d, e.target.value) }, docKinds().map(k => h('option', { value: k.id, selected: d.kind === k.id }, k.icon + ' ' + k.label)))),
         h('td', { class: 'r muted', style: { width: '80px' } }, fmtBytes(d.size)),
@@ -317,8 +327,8 @@ function bDocsCard(b) {
   const upSel = h('select', { title: 'Nature appliquée aux prochains PDF déposés', onchange: e => { bUpKind = e.target.value; } }, docKinds().map(k => h('option', { value: k.id, selected: bUpKind === k.id }, k.icon + ' ' + k.label)));
   const kindBar = h('div', { class: 'toolbar', style: { margin: '8px 0 0' } }, h('span', { class: 'muted' }, 'Catégorie des prochains PDF :'), upSel, h('button', { class: 'btn sm sec', onclick: () => bKindsModal() }, '🏷️ Gérer les catégories'), h('a', { class: 'doclink', href: '#/biens-docs' }, '🗂️ Gestion documentaire →'));
   const bar = docs.length ? h('div', { class: 'toolbar', style: { margin: '10px 0' } },
-    h('button', { class: 'btn sm sec', onclick: () => { bDocSel = bDocSel.size === docs.length ? new Set() : new Set(docs.map(d => d.name)); render(); } }, bDocSel.size === docs.length ? '☐ Tout désélectionner' : '☑ Tout sélectionner'),
-    h('button', { class: 'btn sm', disabled: !bDocSel.size, style: bDocSel.size ? { background: '#dc2626' } : {}, onclick: () => delDocs(b, [...bDocSel]) }, `🗑️ Supprimer la sélection${bDocSel.size ? ' (' + bDocSel.size + ')' : ''}`),
+    h('button', { class: 'btn sm sec bd-all', onclick: () => setAllSel(bDocSel.size !== docs.length) }, bDocSel.size === docs.length ? '☐ Tout désélectionner' : '☑ Tout sélectionner'),
+    h('button', { class: 'btn sm bd-del', disabled: !bDocSel.size, style: bDocSel.size ? { background: '#dc2626' } : {}, onclick: () => delDocs(b, [...bDocSel]) }, `🗑️ Supprimer la sélection${bDocSel.size ? ' (' + bDocSel.size + ')' : ''}`),
     h('span', { class: 'muted' }, 'Cochez plusieurs documents pour les supprimer en une fois.')) : null;
   return bCard('#0ea5e9', '📎 Documents PDF du bien', dz, kindBar, bar, list,
     h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '8px' } }, `${docs.length} document(s) · ${fmtBytes(sum(docs.map(d => d.size)))} · conservés dans le dossier Documents/Biens et inclus dans les sauvegardes « Données ».`));
@@ -390,6 +400,13 @@ function bienEditModal(b) {
   const chkRow = (key, label) => h('label', { style: { display: 'inline-flex', gap: '6px', alignItems: 'center', cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!d[key], onchange: e => { d[key] = e.target.checked; } }), label);
   const numIn = (key, ph, step) => h('input', { type: 'number', step: step ?? '1', value: d[key] ?? '', placeholder: ph, oninput: e => { d[key] = e.target.value === '' ? null : +e.target.value; } });
   const C = d.credit;
+  d.crit ??= {};
+  const critBlock = h('details', { class: 'critbox', open: Object.keys(d.crit).length > 0 ? '' : null },
+    h('summary', {}, '🎯 Critères d’affinage de l’estimation', h('small', { class: 'muted', style: { marginLeft: '8px', fontWeight: 400 } }, 'facultatifs : chacun ajuste le prix au m² médian des ventes')),
+    h('p', { class: 'muted', style: { margin: '8px 0', fontSize: '12.5px' } }, 'Renseignez ce que les ventes de la commune ne disent pas : quartier, vue, bruit, copropriété, prestations… Chaque réponse applique un ajustement indiqué entre parenthèses, que vous pouvez encore modifier ou désactiver dans la page d’estimation. Le cumul est plafonné à ± 40 %.'),
+    ...[...new Set(B_CRITERES.map(c => c.g))].map(g => h('div', { style: { marginBottom: '8px' } }, h('div', { class: 'muted', style: { fontSize: '12px', fontWeight: 700, margin: '6px 0 4px' } }, g),
+      h('div', { class: 'grid g2', style: { gap: '8px 12px' } }, B_CRITERES.filter(c => c.g === g).map(c => bFld(c.label, h('select', { onchange: e => { if (e.target.value) d.crit[c.key] = e.target.value; else delete d.crit[c.key]; } },
+        h('option', { value: '' }, '— non renseigné —'), c.options.map(o => h('option', { value: o.v, selected: d.crit[c.key] === o.v }, o.l + (o.pct ? ' (' + (o.pct > 0 ? '+' : '') + o.pct + ' %)' : ''))))))))));
   closeModal = modal(isNew ? 'Nouveau bien immobilier' : 'Modifier « ' + b.nom + ' »', [
     h('div', { class: 'grid g2', style: { gap: '12px' } },
       bFld('Nom du bien *', h('input', { type: 'text', value: d.nom, placeholder: 'Ex : T3 Bordeaux, Maison de famille…', oninput: e => { d.nom = e.target.value; } })),
@@ -411,6 +428,7 @@ function bienEditModal(b) {
       bFld('État', h('select', { onchange: e => { d.etat = e.target.value; } }, Object.entries(B_ETATS).map(([k, l]) => h('option', { value: k, selected: d.etat === k }, l)))),
       bFld('DPE', h('select', { onchange: e => { d.dpe = e.target.value; } }, B_DPE.map(x => h('option', { value: x, selected: d.dpe === x }, x)))),
       h('div', { class: 'field' }, h('label', {}, 'Atouts'), h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap', paddingTop: '6px' } }, chkRow('exterieur', 'Extérieur'), chkRow('garage', 'Garage'), chkRow('ascenseur', 'Ascenseur'), chkRow('jardin', 'Jardin')))),
+    critBlock,
     h('div', { class: 'grid g4', style: { gap: '12px' } },
       bFld('Date d’achat / signature', h('input', { type: 'date', value: d.dateAchat, oninput: e => { d.dateAchat = e.target.value; } })),
       bFld('Prix d’achat (€)', numIn('prixAchat', '185000', '1000')), bFld('Valeur connue (€, facultatif)', numIn('valeurActuelle', '—', '1000'), 'Saisie libre si vous connaissez la valeur.'),

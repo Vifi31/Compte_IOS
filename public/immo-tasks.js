@@ -71,43 +71,7 @@ function depChips(P, a) {
 }
 
 /** Supprime une tâche et les dépendances qui la visaient. */
-function removeAction(P, a) { P.actions.splice(P.actions.indexOf(a), 1); for (const x of P.actions) if (x.deps) x.deps = x.deps.filter(d => d.id !== a.id); }
-
-/** Fenêtre d'ajout / modification d'une action (durée et dépendances comprises). */
-function editAction(P, a) {
-  const d = a ? { prio: 'normale', duree: 0, ...a, deps: (a.deps ?? []).map(x => ({ ...x })) } : { id: uid(), label: '', phase: TASK_PHASE, date: todayIso(), statut: 'afaire', notes: '', auto: false, tache: true, prio: 'normale', duree: 0, deps: [] };
-  const others = () => P.actions.filter(x => x !== a).sort((p, q) => p.date.localeCompare(q.date));
-  const depBox = h('div', { class: 'depbox' });
-  const drawDeps = () => {
-    depBox.innerHTML = '';
-    d.deps.forEach((dep, i) => depBox.append(h('div', { class: 'deprow' },
-      h('select', { onchange: e => { dep.type = e.target.value; drawDeps(); } }, [['apres', 'Commence après la fin de'], ['avant', 'Se termine avant le début de']].map(([k, l]) => h('option', { value: k, selected: dep.type === k }, l))),
-      h('input', { type: 'number', min: 0, step: 1, value: dep.delay ?? 0, title: 'Délai minimal en jours', onchange: e => { dep.delay = Math.max(0, +e.target.value || 0); } }), h('span', { class: 'muted' }, 'j'),
-      h('select', { onchange: e => { dep.id = e.target.value; } }, others().map(x => h('option', { value: x.id, selected: dep.id === x.id }, `${fdate(x.date)} · ${shortLabel(x.label, 54)}`))),
-      h('button', { class: 'icon-btn', type: 'button', title: 'Retirer cette dépendance', onclick: () => { d.deps.splice(i, 1); drawDeps(); } }, '🗑️'))));
-    if (!d.deps.length) depBox.append(h('div', { class: 'muted', style: { fontSize: '12.5px' } }, 'Aucune dépendance : la tâche est indépendante.'));
-  };
-  drawDeps();
-  modal(a ? 'Modifier l’action' : 'Nouvelle action', [
-    fld('Action', h('input', { type: 'text', value: d.label, oninput: e => { d.label = e.target.value; } })),
-    h('div', { class: 'grid g2', style: { gap: '12px' } }, fld('Phase', h('input', { type: 'text', value: d.phase, list: 'phl', oninput: e => { d.phase = e.target.value; } })), fld('Échéance (fin)', h('input', { type: 'date', value: d.date, onchange: e => { d.date = e.target.value; } })),
-      fld('Durée (jours)', h('input', { type: 'number', min: 0, step: 1, value: d.duree, onchange: e => { d.duree = Math.max(0, +e.target.value || 0); } }), '0 = jalon ; la tâche occupe [échéance − durée ; échéance]'),
-      fld('Statut', h('select', { onchange: e => { d.statut = e.target.value; } }, Object.entries(ST_ACTION).map(([k, l]) => h('option', { value: k, selected: d.statut === k }, l)))),
-      fld('Priorité', h('select', { onchange: e => { d.prio = e.target.value; } }, [['normale', 'Normale'], ['haute', '❗ Prioritaire']].map(([k, l]) => h('option', { value: k, selected: d.prio === k }, l))))),
-    h('datalist', { id: 'phl' }, [...new Set(P.actions.map(x => x.phase))].map(p => h('option', { value: p }))),
-    fld('Notes', h('input', { type: 'text', value: d.notes, oninput: e => { d.notes = e.target.value; } })),
-    h('div', { class: 'field' }, h('label', {}, '⛓ Dépendances et délais'), depBox,
-      h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '6px' }, onclick: () => { const o = others().find(x => !d.deps.some(z => z.id === x.id)); if (!o) return toast('Aucune autre tâche disponible'); d.deps.push({ id: o.id, type: 'apres', delay: 0 }); drawDeps(); } }, '＋ Ajouter une dépendance'),
-      h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' } }, 'Le délai est un minimum en jours (0 = juste après / juste avant). Les contraintes non respectées sont signalées en rouge et peuvent être recalées automatiquement.'))],
-    close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
-      if (!d.label.trim()) return;
-      d.deps = d.deps.filter(x => x.id && x.id !== d.id);
-      const list = a ? P.actions.map(x => x === a ? { ...x, ...d } : x) : [...P.actions, d];
-      if (hasCycle(list)) return toast('⚠️ Ces dépendances forment une boucle (A attend B qui attend A) : modifiez-les');
-      if (a) Object.assign(a, d); else P.actions.push(d);
-      close(); commit();
-    } }, 'Enregistrer')], true);
-}
+function removeAction(P, a) { fetch('/api/immo/files?aid=' + encodeURIComponent(a.id), { method: 'DELETE' }).catch(() => {}); if (S.immoFiles) delete S.immoFiles[a.id]; P.actions.splice(P.actions.indexOf(a), 1); for (const x of P.actions) if (x.deps) x.deps = x.deps.filter(d => d.id !== a.id); }
 
 /** Carte « Contraintes et diagramme de Gantt » : renvoie { el, init } (init après insertion dans la page). */
 function taskGanttCard(P, today) {

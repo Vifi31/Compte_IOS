@@ -38,7 +38,7 @@ const dArch = () => svgDoc(1000, 520,
   svgR(356, 302, 308, 50, { title: 'lib/pdfreport.mjs · lib/zip.mjs', ts: 12, lines: ['rendu PDF (pdfkit) · ZIP sans dépendance'] }) +
   svgR(356, 362, 308, 50, { title: 'lib/ai.mjs', ts: 12, lines: ['fournisseurs d’IA (HTTP sortant, facultatif)'] }) +
   svgA(682, 170, 748, 170, { both: true, label: 'fs' }) +
-  svgR(750, 28, 230, 262, { fill: '#fffbeb', stroke: TDC.amber, title: '💾 Fichiers locaux', tc: '#b45309', lines: ['data/store.json', 'data/secrets.json (clé IA)', 'Documents/Releves/*.pdf', 'Sauvegardes/*.zip', 'Versions/*.zip', 'Rapports/*.pdf (+ index.json)', 'MANIFEST.json', 'serveur.log (version installée)'], ls: 11.5 }) +
+  svgR(750, 28, 230, 262, { fill: '#fffbeb', stroke: TDC.amber, title: '💾 Fichiers locaux', tc: '#b45309', lines: ['data/comptes.db (base SQLite)', 'data/store.json (copie lisible)', 'data/secrets.json (clé IA)', 'Documents/Releves/*.pdf', 'Sauvegardes/*.zip', 'Versions/*.zip', 'Rapports/*.pdf (+ index.json)', 'MANIFEST.json', 'serveur.log (version installée)'], ls: 11.5 }) +
   svgA(682, 388, 748, 388, { dash: true, c: TDC.pink, label: 'facultatif', lc: '#be185d' }) +
   svgR(750, 320, 230, 132, { fill: '#fdf2f8', stroke: TDC.pink, dash: true, title: '☁️ Services d’IA', tc: '#be185d', lines: ['Ollama / LM Studio (local)', 'Gemini · Groq · OpenRouter…', 'Anthropic · OpenAI'] }) +
   svgT(500, 492, 'Tout reste sur votre ordinateur : seul un appel d’IA explicite, avec consentement, envoie des données agrégées.', { size: 12, anchor: 'middle', fill: '#475569', italic: true }));
@@ -48,11 +48,11 @@ const dFlow = () => {
   return svgDoc(1000, 480,
     svgR(40, 20, 180, 38, { fill: '#eef0ff', stroke: TDC.indigo, title: '🖥️ Navigateur', center: true, tc: TDC.indigo }) + svgR(410, 20, 180, 38, { fill: '#ecfdf5', stroke: TDC.green, title: '⚙️ Serveur', center: true, tc: '#047857' }) + svgR(780, 20, 180, 38, { fill: '#fffbeb', stroke: TDC.amber, title: '💾 Fichiers', center: true, tc: '#b45309' }) +
     life(L.n) + life(L.s) + life(L.f) +
-    badge(24, 100, 1) + svgA(L.s, 100, L.f - 4, 100, { label: 'lit store.json · analyse les PDF (import)' }) + svgR(L.s - 120, 114, 240, 24, { r: 6, fill: '#ecfdf5', stroke: TDC.green, title: 'état en mémoire prêt', center: true, ts: 11, tc: '#047857' }) +
+    badge(24, 100, 1) + svgA(L.s, 100, L.f - 4, 100, { label: 'lit la base · analyse les PDF (import)' }) + svgR(L.s - 120, 114, 240, 24, { r: 6, fill: '#ecfdf5', stroke: TDC.green, title: 'état en mémoire prêt', center: true, ts: 11, tc: '#047857' }) +
     badge(24, 178, 2) + svgA(L.n, 178, L.s - 4, 178, { label: 'GET /' }) + svgA(L.s, 204, L.n + 4, 204, { dash: true, label: 'index.html + scripts + style' }) +
     badge(24, 252, 3) + svgA(L.n, 252, L.s - 4, 252, { label: 'GET /api/state' }) + svgR(L.s - 130, 262, 260, 54, { r: 6, fill: '#ecfdf5', stroke: TDC.green, title: 'buildState()', center: true, ts: 11, tc: '#047857', lines: ['opérations + catégories + soldes'], ls: 10.5 }) + svgA(L.s, 334, L.n + 4, 334, { dash: true, label: 'JSON : état complet' }) +
     badge(24, 366, 4) + svgR(L.n - 86, 352, 230, 34, { r: 6, fill: '#eef0ff', stroke: TDC.indigo, title: 'render() : menu, page, graphiques', center: true, ts: 11, tc: TDC.indigo }) +
-    badge(24, 414, 5) + svgA(L.n, 414, L.s - 4, 414, { label: 'PUT / POST /api/… (action)' }) + svgA(L.s, 434, L.f - 4, 434, { label: 'écrit store.json' }) + svgA(L.s, 458, L.n + 4, 458, { dash: true, label: 'état à jour → render()' }));
+    badge(24, 414, 5) + svgA(L.n, 414, L.s - 4, 414, { label: 'PUT / POST /api/… (action)' }) + svgA(L.s, 434, L.f - 4, 434, { label: 'écrit dans la base SQLite' }) + svgA(L.s, 458, L.n + 4, 458, { dash: true, label: 'état à jour → render()' }));
 };
 
 const dImport = () => {
@@ -64,7 +64,7 @@ const dImport = () => {
 };
 
 const dStore = () => svgDoc(1000, 430,
-  svgR(380, 168, 240, 94, { fill: '#eef0ff', stroke: TDC.indigo, sw: 2.5, title: '🗄️ data/store.json', center: true, tc: TDC.indigo, ts: 15, lines: ['un seul fichier JSON', 'écrit à chaque modification'] }) +
+  svgR(380, 168, 240, 94, { fill: '#eef0ff', stroke: TDC.indigo, sw: 2.5, title: '🗄️ data/comptes.db', center: true, tc: TDC.indigo, ts: 15, lines: ['base SQLite (12 tables)', 'écrite à chaque modification'] }) +
   svgR(20, 20, 310, 128, { fill: '#fff', stroke: TDC.pink, title: '🏷️ Classement', tc: '#be185d', lines: ['categories : nom, icône, couleur, type, budget', 'rules : motif → catégorie (+ sens débit / crédit)', 'overrides : correction par opération', 'accountAliases : noms de comptes'] }) +
   svgR(670, 20, 310, 128, { fill: '#fff', stroke: TDC.green, title: '🏦 Comptes et budgets', tc: '#047857', lines: ['manualAccounts · manualOps : saisie manuelle', 'forecasts : prévisions modifiées par mois', 'catégories : budgets mensuels', '(les relevés PDF restent des fichiers)'] }) +
   svgR(20, 282, 310, 128, { fill: '#fff', stroke: TDC.amber, title: '⚙️ Paramètres', tc: '#b45309', lines: ['settings.menu : libellés, ordre, groupes', 'settings.backup : planification', 'license : copyright, contrat, acceptation', 'ai : fournisseur, modèle (sans la clé)'] }) +
@@ -93,7 +93,7 @@ const dImmo = () => svgDoc(1000, 470,
 const dSafe = () => svgDoc(1000, 470,
   svgR(18, 20, 470, 210, { fill: '#fff', stroke: TDC.amber, title: '💾 Sauvegardes (archives ZIP dans Sauvegardes/)', tc: '#b45309' }) +
   [['', 'Données', 'Programme', 'Rapports'], ['Sauvegarde « Données »', '✔', '', ''], ['Sauvegarde « Programme »', '', '✔', ''], ['Sauvegarde « Complète »', '✔', '✔', '✔']].map((r, i) => r.map((c, j) => svgT(j === 0 ? 34 : 250 + (j - 1) * 80, 70 + i * 28, c, { size: i === 0 ? 11 : 12, weight: i === 0 || j === 0 ? 700 : 400, fill: c === '✔' ? '#059669' : '#334155', anchor: j === 0 ? 'start' : 'middle' })).join('')).join('') +
-  svgT(34, 188, 'Données = store.json + Documents/ · Programme = server.mjs, lib/, public/…', { size: 10.5, fill: '#64748b' }) + svgT(34, 206, 'Planification : un minuteur (60 s) crée la sauvegarde du dernier créneau manqué, puis purge.', { size: 10.5, fill: '#64748b' }) +
+  svgT(34, 188, 'Données = comptes.db (+ store.json) + Documents/ · Programme = server.mjs, lib/, public/…', { size: 10.5, fill: '#64748b' }) + svgT(34, 206, 'Planification : un minuteur (60 s) crée la sauvegarde du dernier créneau manqué, puis purge.', { size: 10.5, fill: '#64748b' }) +
   svgR(512, 20, 470, 210, { fill: '#fff', stroke: TDC.indigo, title: '🏷️ Versions du programme (Versions/)', tc: TDC.indigo }) +
   [['mineur', '+0.0.1', TDC.green], ['intermédiaire', '+0.1.0', TDC.amber], ['majeur', '+1.0.0', TDC.red]].map(([t, v, c], i) => svgR(528 + i * 150, 56, 136, 52, { stroke: c, sw: 2, fill: c + '14', title: v, center: true, tc: c, ts: 15, lines: [t] })).join('') +
   svgT(528, 138, 'Publier : instantané ZIP du programme + manifest.json (notes, prompt, niveau)', { size: 11, fill: '#475569' }) + svgT(528, 156, '+ entrée dans CHANGELOG.md · journal des prompts lié à la version', { size: 11, fill: '#475569' }) +
@@ -179,7 +179,7 @@ async function pageTechDocs(v) {
       tdList([tdB('Navigateur'), ' : il charge une seule page (index.html) puis une série de scripts globaux ; aucune étape de compilation.'], [tdB('Serveur'), ' : un routeur par domaine (extra, features, manual) essaie la requête tour à tour ; le premier qui la reconnaît répond.'], [tdB('Fichiers'), ' : les relevés PDF sont la source de vérité des opérations bancaires ; store.json contient tout ce que vous paramétrez.'], [tdB('Externe'), ' : uniquement l’IA, uniquement si vous la configurez.']),
     ]],
     ['flow', '🔄', 'Fonctionnement : du démarrage à l’affichage', () => [
-      tdText('Au démarrage, le serveur lit store.json puis ', tdB('analyse tous les relevés PDF'), ' (quelques secondes) et garde le résultat en mémoire. Ensuite chaque requête ne fait que combiner cet état avec vos paramètres.'),
+      tdText('Au démarrage, le serveur ouvre la base SQLite (data/comptes.db) puis ', tdB('analyse tous les relevés PDF'), ' (quelques secondes) et garde le résultat en mémoire. Ensuite chaque requête ne fait que combiner cet état avec vos paramètres.'),
       diagram(dFlow(), 'Séquence : démarrage, chargement de la page, état, action de l’utilisateur'),
       tdList([tdB('Chargement'), ' : /api/state renvoie tout ce qu’il faut pour dessiner l’interface (opérations catégorisées, comptes, catégories, règles, menus, licence).'], [tdB('Modification'), ' : toute action est un appel PUT / POST / DELETE ; le serveur écrit store.json puis renvoie le nouvel état, que l’interface adopte et redessine.'], [tdB('Réimport'), ' : ajout, suppression ou restauration d’un relevé relance l’analyse des PDF.']),
     ]],
@@ -188,10 +188,10 @@ async function pageTechDocs(v) {
       tdList([tdB('Extraction'), ' : pdfjs-dist fournit chaque mot avec ses coordonnées ; l’analyse retrouve les colonnes (date, libellé, débit, crédit) à partir des positions, pas du texte brut.'], [tdB('Contrôles'), ' : le total des débits, le total des crédits et les soldes d’ouverture / clôture sont recalculés et comparés à ceux du relevé (✅ / 🟠).'], [tdB('Virements internes'), ' : les titulaires sont lus dans l’en-tête des relevés (lib/holders.mjs) ; un virement vers un titulaire ou un compte connu est classé « virement interne » et exclu des totaux.'], [tdB('Catégorisation'), ' : la première règle qui correspond (motif, sens débit / crédit) gagne ; une correction manuelle (overrides) l’emporte toujours.']),
     ]],
     ['data', '🗄️', 'Stockage et modèle de données', () => [
-      diagram(dStore(), 'Contenu de data/store.json et fichiers situés hors du store'),
+      diagram(dStore(), 'Contenu de la base de données (clés du store) et fichiers situés hors de la base'),
       tdText('Taille actuelle de chaque clé du fichier de données (calculée à l’instant) :'),
       T.storeKeys.length ? tdBars(T.storeKeys.slice(0, 12).map(k => ({ label: k.key, value: k.bytes, text: hsize(k.bytes) })), TDC.indigo) : tdText('(non disponible)'),
-      tdList([tdB('Écriture'), ' : le fichier est réécrit en entier de façon synchrone à chaque modification (usage mono-utilisateur).'], [tdB('Structure souple'), ' : chaque module crée ses clés à la première utilisation (??=), ce qui évite toute migration lors d’une mise à jour.'], [tdB('Sauvegarde'), ' : store.json + Documents/ forment la sauvegarde « données » ; secrets.json en est exclu.']),
+      tdList([tdB('Moteur'), ' : SQLite via le module intégré node:sqlite (aucune dépendance), fichier data/comptes.db en mode WAL. Le serveur garde l’état en mémoire et le persiste à chaque modification : lib/db.mjs ne réécrit que les sections modifiées (catégories, règles, journal des prompts, biens, actions…), dans une transaction.'], [tdB('Tables'), ' : categories, rules, overrides, manual_accounts, manual_ops, prompt_journal, analyses, biens, immo_project, immo_actions, config (réglages) et meta (version du schéma). Chaque ligne porte quelques colonnes interrogeables et une colonne data (JSON complet) : aucun champ n’est perdu quand le modèle évolue.'], [tdB('Migration'), ' : au premier démarrage, l’ancien store.json est importé (copie de sécurité store.json.avant-base). Si la base est inaccessible, l’application retombe sur store.json écrit aussitôt.'], [tdB('Copie lisible'), ' : data/store.json est conservé comme miroir (écrit 1,5 s après les modifications) ; il alimente les sauvegardes, et leur restauration le réimporte dans la base.'], [tdB('Administration'), ' : page Administration › Base de données (état, tables en lecture seule, contrôle d’intégrité, compactage, export JSON, téléchargement du fichier .db) ; API /api/db/* (lib/dbadmin.mjs).'], [tdB('Sauvegarde'), ' : la sauvegarde « données » contient store.json (copie lisible), Documents/ et les pièces jointes ; secrets.json en est exclu.']),
     ]],
     ['code', '📚', 'Organisation du code', () => {
       const byDir = g => T.files.filter(f => f.group === g).sort((a, b) => b.lines - a.lines);

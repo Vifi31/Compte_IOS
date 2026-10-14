@@ -245,18 +245,6 @@ function ganttPhases(P, sim) {
   return out;
 }
 
-/** Ajout rapide d'une tâche personnelle : elle rejoint le plan d'actions (par phase) et le suivi. */
-function taskQuickAdd(P) {
-  const phases = [...new Set([...P.actions.map(a => a.phase), TASK_PHASE])].sort(), d = { label: '', phase: TASK_PHASE, date: addDays(todayIso(), 7), prio: 'normale' };
-  const inp = h('input', { type: 'text', placeholder: 'Nouvelle tâche : appeler le courtier, relire le contrat, envoyer un justificatif…', style: { flex: '1 1 280px', minWidth: '200px' }, oninput: e => { d.label = e.target.value; }, onkeydown: e => { if (e.key === 'Enter') add(); } });
-  const add = () => { const l = d.label.trim(); if (!l) { inp.focus(); return; } P.actions.push({ id: uid(), tache: true, statut: 'afaire', label: l, phase: d.phase, date: d.date, prio: d.prio, notes: '' }); toast('✅ Tâche ajoutée au plan d’actions et au suivi'); commit(); };
-  return h('div', { class: 'taskadd' }, h('span', { class: 'tag' }, '＋ Tâche'), inp,
-    h('select', { title: 'Phase', onchange: e => { d.phase = e.target.value; } }, phases.map(p => h('option', { value: p, selected: p === d.phase }, p))),
-    h('input', { type: 'date', value: d.date, title: 'Échéance', onchange: e => { d.date = e.target.value; } }),
-    h('select', { title: 'Priorité', onchange: e => { d.prio = e.target.value; } }, [['normale', 'Priorité normale'], ['haute', '❗ Prioritaire']].map(([k, l]) => h('option', { value: k }, l))),
-    h('button', { class: 'btn sm', onclick: add }, 'Ajouter'));
-}
-
 // ====================================================== PDF
 function immoPdf(P, sim) {
   const s = sim.summary, v = verdict(sim, P), landscape = true;
@@ -286,10 +274,9 @@ function immoPdf(P, sim) {
   return generateReport({ title: 'Dossier de financement VEFA', file: 'dossier-vefa', layout: landscape ? 'landscape' : 'portrait', subtitle: `${P.nom} · ${eur0(P.prix)} · livraison ${fdate(P.dateLivraison)}`, blocks });
 }
 function immoActionsPdf(P, sim) {
-  void sim;
-  const today = todayIso(), A = P.actions, stOf = a => actStatus(a, today), cnt = k => A.filter(a => stOf(a) === k).length;
-  const phases = [...new Set(A.map(a => a.phase))].sort(), clean = p => p.replace(/^\d+\.\s*/, ''), done = cnt('fait'), late = A.filter(a => stOf(a) === 'retard');
-  const soon = A.filter(a => a.statut !== 'fait' && a.date >= today && a.date <= addDays(today, 30)).sort((a, b) => a.date.localeCompare(b.date));
+  const today = todayIso(), A = P.actions, naSet = new Set(A.filter(a => !condState(P, sim, a).ok).map(a => a.id)), stOf = a => (naSet.has(a.id) ? 'na' : actStatus(a, today)), cnt = k => A.filter(a => stOf(a) === k).length;
+  const phases = immoPhasesUsed(P), clean = p => p.replace(/^\d+\.\s*/, ''), done = cnt('fait'), late = A.filter(a => stOf(a) === 'retard');
+  const soon = A.filter(a => !naSet.has(a.id) && a.statut !== 'fait' && a.date >= today && a.date <= addDays(today, 30)).sort((a, b) => a.date.localeCompare(b.date));
   const days = d => Math.round((pdate(today) - pdate(d)) / 864e5);
   const blocks = [{ t: 'kpis', items: [
     { label: 'Actions', value: String(A.length), sub: phases.length + ' phases · ' + A.filter(a => a.tache).length + ' tâche(s) perso', color: '#6366f1' },

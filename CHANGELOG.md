@@ -1,5 +1,44 @@
 # Journal des modifications
 
+## 2.7.1 — 2026-10-14
+- Base de données : graphiques de volume et prévision à 12 mois
+
+## 2.7.0 — 2026-10-14
+- Base de données SQLite pour le stockage des informations (migration automatique de store.json), page d’administration
+
+## 2.6.6 — 2026-10-13
+- Plan d’actions : pièces jointes sur chaque action
+
+## 2.6.5 — 2026-10-13
+- Plan d’actions : « À traiter en priorité » en haut, pleine largeur
+
+## 2.6.4 — 2026-10-13
+- Plan d’actions : tâches regroupées en enchaînements selon les dépendances, dates et recalage par enchaînement
+
+## 2.6.3 — 2026-10-13
+- Plan d’actions : dépendances tracées en rails colorés dans chaque phase, mises à jour automatiquement
+
+## 2.6.2 — 2026-10-13
+- Plan d’actions : phases en haut de l’écran, navigation par phase, retour sur la phase modifiée
+
+## 2.6.1 — 2026-10-13
+- Plan d’actions : ajout d’une tâche directement dans chaque phase
+
+## 2.6.0 — 2026-10-13
+- Plan d’actions : phases gérables, catalogue et modèles de tâches, conditions d’application, édition complète
+
+## 2.5.0 — 2026-10-10
+- Fiche du bien : 14 critères d’affinage de l’estimation (quartier, bruit, vue, copropriété, prestations…)
+
+## 2.4.18 — 2026-10-10
+- Documents : sélection sans réaffichage de la page, case d’en-tête, sélection limitée aux lignes filtrées
+
+## 2.4.17 — 2026-10-10
+- Gestion documentaire : parties de l’écran pliables, état mémorisé
+
+## 2.4.16 — 2026-10-10
+- Gestion documentaire : bloc visible de gestion des catégories (renommer, icône, ajouter, supprimer)
+
 ## 2.4.15 — 2026-10-10
 - Fiche du bien : revenus intégrés aux opérations rattachées ; coût net, rendement brut/net et cash-flow
 

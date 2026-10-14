@@ -92,10 +92,14 @@ function estAdjustments(b) {
     out.push({ key: 'etage', label: 'Étage', pct: base + noLift, detail: b.etage + (noLift ? ', sans ascenseur' : '') });
   }
   if (b.type === 'maison' && +b.terrain > 200) out.push({ key: 'terrain', label: 'Terrain', pct: Math.min(10, Math.round((+b.terrain - 200) / 100)), detail: Math.round(+b.terrain) + ' m²' });
+  for (const c of B_CRITERES) { // critères qualitatifs saisis dans la fiche : chaque option porte un ajustement par défaut (modifiable à l'estimation)
+    const o = c.options.find(x => x.v === (b.crit ?? {})[c.key]); if (o && o.pct) out.push({ key: 'c_' + c.key, label: c.label, pct: o.pct, detail: o.l });
+  }
   return out.map(a => ({ ...a, on: true }));
 }
 /** Facteur cumulé des ajustements activés. */
-const estFactor = adj => adj.filter(a => a.on).reduce((f, a) => f * (1 + (+a.pct || 0) / 100), 1);
+/** Coefficient cumulé des ajustements actifs, plafonné à −40 % / +40 % pour éviter les cumuls irréalistes. */
+const estFactor = adj => Math.min(1.4, Math.max(.6, adj.filter(a => a.on).reduce((f, a) => f * (1 + (+a.pct || 0) / 100), 1)));
 
 /**
  * Estimation à partir de ventes réelles (DVF) : comparables par commune / type / surface,
@@ -185,3 +189,22 @@ function bienRentabilite(b) {
   const pc = x => (val > 0 ? x / val * 100 : 0);
   return { source: real ? 'reel' : (rev > 0 ? 'declare' : 'aucun'), rev, dep, net: rev - dep, cout: dep - rev, brut: pc(rev), netPct: pc(rev - dep), cash: (rev - dep) / 12, couverture: dep > 0 ? rev / dep * 100 : null, from, end };
 }
+
+// ---- critères d'affinage de l'estimation (fiche du bien) : chaque option porte un ajustement du €/m² médian, en %
+const B_CRITERES = [
+  { key: 'quartier', g: 'Environnement', label: 'Réputation du quartier', options: [{ v: 'recherche', l: 'Quartier recherché', pct: 8 }, { v: 'standard', l: 'Quartier standard', pct: 0 }, { v: 'delicat', l: 'Quartier peu attractif', pct: -10 }] },
+  { key: 'calme', g: 'Environnement', label: 'Environnement sonore', options: [{ v: 'calme', l: 'Calme', pct: 3 }, { v: 'normal', l: 'Normal', pct: 0 }, { v: 'bruyant', l: 'Bruyant (axe passant, voisinage)', pct: -6 }] },
+  { key: 'transports', g: 'Environnement', label: 'Transports en commun', options: [{ v: 'proches', l: 'Métro, RER ou gare à moins de 500 m', pct: 4 }, { v: 'moyen', l: 'À distance moyenne', pct: 0 }, { v: 'eloignes', l: 'Éloignés', pct: -4 }] },
+  { key: 'commerces', g: 'Environnement', label: 'Commerces, écoles, services à pied', options: [{ v: 'proches', l: 'Tout à proximité', pct: 2 }, { v: 'moyen', l: 'Partiel', pct: 0 }, { v: 'eloignes', l: 'Éloignés', pct: -3 }] },
+  { key: 'vue', g: 'Situation du logement', label: 'Vue et vis-à-vis', options: [{ v: 'degagee', l: 'Vue dégagée', pct: 5 }, { v: 'normale', l: 'Normale', pct: 0 }, { v: 'visavis', l: 'Vis-à-vis important', pct: -5 }] },
+  { key: 'lumiere', g: 'Situation du logement', label: 'Exposition et luminosité', options: [{ v: 'lumineux', l: 'Lumineux (sud, traversant)', pct: 4 }, { v: 'correct', l: 'Correct', pct: 0 }, { v: 'sombre', l: 'Sombre (nord, rez-de-cour)', pct: -6 }] },
+  { key: 'cave', g: 'Situation du logement', label: 'Cave ou rangement annexe', options: [{ v: 'oui', l: 'Oui', pct: 1 }, { v: 'non', l: 'Non', pct: 0 }] },
+  { key: 'piscine', g: 'Situation du logement', label: 'Piscine ou équipement de loisirs', options: [{ v: 'oui', l: 'Oui', pct: 5 }, { v: 'non', l: 'Non', pct: 0 }] },
+  { key: 'immeuble', g: 'Immeuble et copropriété', label: 'Entretien et standing de l’immeuble', options: [{ v: 'standing', l: 'Soigné (gardien, parties communes)', pct: 4 }, { v: 'standard', l: 'Standard', pct: 0 }, { v: 'degrade', l: 'Dégradé', pct: -6 }] },
+  { key: 'charges', g: 'Immeuble et copropriété', label: 'Charges de copropriété', options: [{ v: 'faibles', l: 'Faibles', pct: 2 }, { v: 'normales', l: 'Normales', pct: 0 }, { v: 'elevees', l: 'Élevées', pct: -4 }] },
+  { key: 'travauxcopro', g: 'Immeuble et copropriété', label: 'Gros travaux de copropriété', options: [{ v: 'aucun', l: 'Aucun prévu', pct: 0 }, { v: 'votes', l: 'Votés, à charge de l’acquéreur', pct: -3 }, { v: 'importants', l: 'Lourds (façade, toiture, ascenseur)', pct: -6 }] },
+  { key: 'equipements', g: 'Prestations', label: 'Cuisine et salle de bains', options: [{ v: 'refaites', l: 'Refaites à neuf', pct: 3 }, { v: 'correct', l: 'En bon état', pct: 0 }, { v: 'arefaire', l: 'À refaire', pct: -4 }] },
+  { key: 'menuiseries', g: 'Prestations', label: 'Fenêtres et isolation', options: [{ v: 'recentes', l: 'Double vitrage récent', pct: 1 }, { v: 'anciennes', l: 'Simple vitrage ou anciennes', pct: -3 }] },
+  { key: 'occupation', g: 'Situation juridique', label: 'Occupation du bien', options: [{ v: 'libre', l: 'Libre à la vente', pct: 0 }, { v: 'loue', l: 'Vendu loué / occupé', pct: -8 }] },
+];
+const critSummary = b => B_CRITERES.map(c => { const o = c.options.find(x => x.v === (b.crit ?? {})[c.key]); return o ? { c, o } : null; }).filter(Boolean);

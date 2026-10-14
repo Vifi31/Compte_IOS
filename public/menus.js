@@ -6,7 +6,7 @@ const NAV_GROUPS = [
   { id: 'data', label: 'Gestion Données', icon: '🗂️', items: [['categories', '🏷️', 'Catégories'], ['accounts', '🏦', 'Comptes'], ['statements', '🗃️', 'Relevés']] },
   { id: 'immo', label: 'Immobilier', icon: '🏗️', items: [['immo', '🏗️', 'Projet VEFA'], ['immo-params', '⚙️', 'Paramètres'], ['immo-planning', '🗓️', 'Planning et simulation'], ['immo-suivi', '📈', 'Suivi'], ['immo-actions', '✅', 'Plan d’actions'], ['immo-ai', '🧠', 'Analyse IA']] },
   { id: 'biens', label: 'Gestion de bien Immobiliers', icon: '🏘️', items: [['biens', '🏘️', 'Mes biens'], ['bien', '🏠', 'Fiche du bien', true], ['biens-docs', '🗂️', 'Gestion documentaire'], ['biens-stats', '📊', 'Dépenses et statistiques'], ['biens-estimation', '🧮', 'Estimation de valeur']] },
-  { id: 'admin', label: 'Administration', icon: '⚙️', items: [['backups', '💾', 'Sauvegardes'], ['versions', '🏷️', 'Versions'], ['prompts', '📜', 'Prompt'], ['license', '©️', 'Licence'], ['manifest', '📋', 'Manifeste'], ['model', '🧬', 'Modèle'], ['techdocs', '🛠️', 'Documentation technique'], ['menus', '🎛️', 'Affichage des menus', true]] },
+  { id: 'admin', label: 'Administration', icon: '⚙️', items: [['backups', '💾', 'Sauvegardes'], ['db', '🗄️', 'Base de données'], ['versions', '🏷️', 'Versions'], ['prompts', '📜', 'Prompt'], ['license', '©️', 'Licence'], ['manifest', '📋', 'Manifeste'], ['model', '🧬', 'Modèle'], ['techdocs', '🛠️', 'Documentation technique'], ['menus', '🎛️', 'Affichage des menus', true]] },
   { id: 'help', label: '', items: [['docs', '📘', 'Documentation']] },
 ];
 const menuCfg = () => ({ hidden: [], order: {}, groupOrder: [], labels: {}, icons: {}, moves: {}, customGroups: [], ...(S.data?.menu ?? {}) });

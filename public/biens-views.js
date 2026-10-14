@@ -160,6 +160,7 @@ function besApply(b, res) {
   const ov = (S.besAdj ??= {})[b.id] ?? {};
   let f = 1;
   for (const a of res.adj ?? []) { const o = ov[a.key]; if (o) { if (o.pct != null) a.pct = +o.pct; if (o.on != null) a.on = !!o.on; } if (a.on) f *= 1 + (+a.pct || 0) / 100; }
+  f = Math.min(1.4, Math.max(.6, f)); // même plafond que le moteur
   res.factor = Math.round(f * 1000) / 1000;
   if (res.ppsm) {
     res.mini = Math.round(res.ppsm.p25 * res.surface * f); res.centre = Math.round(res.ppsm.p50 * res.surface * f); res.maxi = Math.round(res.ppsm.p75 * res.surface * f);
@@ -209,6 +210,7 @@ async function pageBiensEstimation(v) {
       b.surface ? h('span', { class: 'chip toggle' }, `${b.surface} m²`) : null, b.pieces ? h('span', { class: 'chip toggle' }, `${b.pieces} pièce(s)`) : null,
       b.etage ? h('span', { class: 'chip toggle' }, 'Étage : ' + b.etage) : null, b.annee ? h('span', { class: 'chip toggle' }, 'Construit en ' + b.annee) : null,
       b.etat ? h('span', { class: 'chip toggle' }, B_ETATS[b.etat] ?? b.etat) : null, b.dpe ? h('span', { class: 'chip toggle' }, 'DPE ' + b.dpe) : null,
+      ...critSummary(b).map(({ c, o }) => h('span', { class: 'chip toggle' + (o.pct > 0 ? ' on' : ''), style: o.pct > 0 ? { background: '#10b981' } : o.pct < 0 ? { color: '#dc2626', borderColor: '#dc2626' } : {}, title: c.label + ' : ' + (o.pct > 0 ? '+' : '') + o.pct + ' %' }, o.l)),
       b.exterieur ? h('span', { class: 'chip toggle' }, 'Extérieur') : null, b.garage ? h('span', { class: 'chip toggle' }, 'Garage') : null,
       b.ascenseur ? h('span', { class: 'chip toggle' }, 'Ascenseur') : null, b.terrain ? h('span', { class: 'chip toggle' }, `Terrain ${b.terrain} m²`) : null,
       b.commune ? h('span', { class: 'chip toggle on' }, `📍 ${b.ville} (${b.commune})`) : h('span', { class: 'chip toggle', style: { color: '#dc2626', borderColor: '#dc2626' } }, 'Commune à renseigner')))));

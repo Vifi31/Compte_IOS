@@ -439,3 +439,46 @@ tr.tfilter input{width:100%;min-width:56px;padding:3px 6px;font-size:12px;border
 .tblbar select{padding:2px 6px;font-size:12px}
 
 mark{background:#fde68a;color:inherit;border-radius:3px;padding:0 2px}
+
+details.gdfold>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-weight:700}
+details.gdfold>summary::-webkit-details-marker{display:none}
+details.gdfold>summary::before{content:'▸';color:var(--muted,#64748b);width:14px;transition:transform .15s}
+details.gdfold[open]>summary::before{transform:rotate(90deg)}
+details.gdfold>.gdbody{margin-top:10px}
+
+details.critbox{border:1px solid var(--line,#e2e8f0);border-radius:10px;padding:8px 12px;margin:8px 0}
+details.critbox>summary{cursor:pointer;font-weight:700}
+
+.actrow.st-na{opacity:.55}
+.actrow.st-na .actl{text-decoration:line-through;text-decoration-color:rgba(100,116,139,.5)}
+
+.taskadd.phaseadd{margin:10px 0 0;padding:8px 10px;background:transparent;border:1px dashed var(--line,#cbd5e1);box-shadow:none}
+
+/* plan d'actions : navigation par phase et retour visuel sur la phase modifiée */
+.phasenav{margin:12px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg,transparent);padding:6px 0}
+.flashcard{animation:flashcard 1.8s ease}
+@keyframes flashcard{0%{box-shadow:0 0 0 3px rgba(99,102,241,.55)}100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}
+main .card{scroll-margin-top:56px}
+
+/* rails de dépendances dans les cartes de phase */
+.card.hasrails{position:relative;padding-left:calc(var(--rail,0px) + 14px)}
+svg.rails{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.railleg{font-size:12px;margin:2px 0 8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.railleg .rl{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--text)}
+.railleg .rl::before{content:'';width:16px;height:3px;border-radius:2px;background:var(--pc)}
+.depchip.xdep{font-size:11px;padding:1px 7px}
+
+/* plan d'actions : en-têtes d'enchaînements */
+.chainhdr{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 4px;padding:5px 10px;border-radius:8px;font-size:12.5px;background:color-mix(in srgb,var(--ac,#6366f1) 9%,transparent);border-left:4px solid var(--ac,#6366f1)}
+.chainhdr.free{background:transparent;border-left-color:var(--line,#cbd5e1)}
+.chainhdr.bad{background:rgba(239,68,68,.08);border-left-color:#ef4444}
+.chainwarn{color:#dc2626;font-weight:700}.chainok{color:#059669;font-weight:700}
+
+.urgentgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:2px 14px}
+.urgentgrid .actrow{margin:3px 0}
+
+/* pièces jointes des actions */
+.filebadge{border:1px solid var(--line,#cbd5e1);background:transparent;border-radius:999px;padding:0 8px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--primary,#6366f1);margin-left:6px}
+.filebadge:hover{background:rgba(99,102,241,.1)}
+.attachrow{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line,#e2e8f0);font-size:13px}
+.attachrow a.doclink{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
