@@ -278,7 +278,7 @@ function pageOperations(v) {
       h('button', { class: 'btn sm', onclick: () => manualOpModal(null) }, '＋ Nouvelle opération'),
       autos ? h('button', { class: 'btn sm sec', onclick: () => { f.source = f.source ? '' : 'défaut'; render(); } }, f.source ? '✕ Non classées' : `❓ ${autos} non classées`) : null),
     h('div', { class: 'muted', style: { marginBottom: '8px' } }, `${ops.length} opération${ops.length > 1 ? 's' : ''} · total `, h('b', { class: totalAmt < 0 ? 'neg' : 'pos' }, signed(totalAmt))),
-    ops.length ? h('div', { class: 'tablewrap' }, h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, allCb), th('Date', 'date'), th('Libellé', 'title'), h('th', {}, 'Compte'), h('th', {}, 'Catégorie'), th('Montant', 'amount', 'r'))), tbody)) : h('div', { class: 'empty' }, 'Aucune opération ne correspond.'),
+    ops.length ? h('div', { class: 'tablewrap' }, h('table', { class: 'optable' }, h('thead', {}, h('tr', {}, h('th', {}, allCb), th('Date', 'date'), th('Libellé', 'title'), h('th', {}, 'Compte'), h('th', {}, 'Catégorie'), th('Montant', 'amount', 'r'))), tbody)) : h('div', { class: 'empty' }, 'Aucune opération ne correspond.'),
     ops.length > shown.length ? h('div', { style: { textAlign: 'center', marginTop: '14px' } }, h('button', { class: 'btn sec', onclick: () => { f.limit += 300; render(); } }, `Afficher plus (${ops.length - shown.length} restantes)`)) : null,
     bulk));
   redrawBulk();

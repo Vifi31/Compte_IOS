@@ -1,5 +1,9 @@
 # Journal des modifications
 
+## 2.7.4 — 2026-10-17
+- Écran smartphone : menu en tiroir (bouton ☰), grilles sur une colonne, indicateurs deux par ligne, tableau des opérations compact, fenêtres plein écran par le bas, champs et boutons à la taille du doigt
+- Appli Android : icône et écran de démarrage, bouton retour (menu, fenêtre, page précédente), marges des barres système
+
 ## 2.7.3 — 2026-10-17
 - Appli Android autonome : cœur partagé (lib/app.mjs), moteur local sans serveur (SQLite WebAssembly, fichiers sur le téléphone), projet Capacitor, APK publié sur GitHub
 

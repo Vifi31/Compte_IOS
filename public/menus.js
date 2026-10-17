@@ -134,3 +134,11 @@ function deleteMenuModal(g, cfg) {
       saveMenu({ customGroups: cfg.customGroups.filter(x => x.id !== g.id), moves, order, groupOrder: cfg.groupOrder.filter(x => x !== g.id), hidden: cfg.hidden.filter(x => x !== 'g:' + g.id) }); close(); toast('Menu supprimé');
     } }, 'Supprimer')]);
 }
+
+// ---------- Petit écran : menu latéral en tiroir (bouton ☰), refermé au choix d'une page ----------
+const navDrawer = open => document.body.classList.toggle('nav-open', open);
+document.getElementById('menuBtn').addEventListener('click', () => navDrawer(!document.body.classList.contains('nav-open')));
+document.getElementById('navBack').addEventListener('click', () => navDrawer(false));
+document.getElementById('nav').addEventListener('click', e => { if (e.target.closest('a[href]')) navDrawer(false); });
+window.addEventListener('hashchange', () => navDrawer(false));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') navDrawer(false); });

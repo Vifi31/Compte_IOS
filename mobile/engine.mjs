@@ -10,6 +10,7 @@ import pkg from '../package.json';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { App } from '@capacitor/app';
 
 const BASE = new URL('.', import.meta.url).href; // dossier du moteur (sql-wasm.wasm, pdf.worker.mjs)
 
@@ -84,3 +85,12 @@ async function openFile(url, download) {
 }
 
 apiUseLocal(handle, openFile);
+
+// Bouton « retour » d'Android : referme le menu ou la fenêtre ouverte, sinon page précédente, sinon quitte l'appli.
+if (Capacitor.isNativePlatform()) App.addListener('backButton', ({ canGoBack }) => {
+  const modal = document.getElementById('modalRoot');
+  if (document.body.classList.contains('nav-open')) document.body.classList.remove('nav-open');
+  else if (modal?.children.length) modal.innerHTML = '';
+  else if (canGoBack && !['', '#', '#/', '#/dashboard'].includes(location.hash)) history.back();
+  else App.exitApp();
+});
