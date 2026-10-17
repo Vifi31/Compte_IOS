@@ -30,7 +30,10 @@ function navModel(cfg = menuCfg()) {
   groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   return groups;
 }
-const itemHidden = (it, cfg) => NAV_HIDDEN.includes(it.id) || (!it.locked && cfg.hidden.includes(it.id));
+// Appli Android (moteur local) : Administration réduite aux pages utiles sur le téléphone.
+const MOBILE_ADMIN = ['backups', 'db'];
+const mobileHidden = it => apiIsLocal() && it.home === 'admin' && !MOBILE_ADMIN.includes(it.id);
+const itemHidden = (it, cfg) => NAV_HIDDEN.includes(it.id) || mobileHidden(it) || (!it.locked && cfg.hidden.includes(it.id));
 const groupHidden = (g, cfg) => !g.locked && cfg.hidden.includes('g:' + g.id);
 function navLookup(id) { for (const g of navModel()) { const it = g.items.find(i => i.id === id); if (it) return { item: [it.id, it.icon, it.label], group: g }; } return null; }
 
