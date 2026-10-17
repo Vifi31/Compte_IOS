@@ -72,7 +72,7 @@ async function openFile(url, download) {
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Fichier introuvable');
   const name = /filename="([^"]+)"/.exec(r.headers.get('content-disposition') || '')?.[1] || url.split('name=').pop() || 'fichier';
   const blob = await r.blob();
-  if (Capacitor.isNativePlatform()) { // la WebView Android n'ouvre ni ne télécharge les Blob : fichier temporaire, puis menu « Ouvrir avec / Partager »
+  if (Capacitor.isNativePlatform()) { // les WebView Android et iOS n'ouvrent ni ne téléchargent les Blob : fichier temporaire, puis menu « Ouvrir avec / Partager »
     const data = Buffer.from(await blob.arrayBuffer()).toString('base64'), file = decodeURIComponent(name).replace(/[\\/:*?"<>|]/g, '_');
     const { uri } = await Filesystem.writeFile({ path: file, data, directory: Directory.Cache });
     await Share.share({ title: file, url: uri, dialogTitle: download ? 'Enregistrer ou envoyer' : 'Ouvrir avec' });
@@ -86,7 +86,7 @@ async function openFile(url, download) {
 
 apiUseLocal(handle, openFile);
 
-// Bouton « retour » d'Android : referme le menu ou la fenêtre ouverte, sinon page précédente, sinon quitte l'appli.
+// Bouton « retour » d'Android (sans objet sur iPhone) : referme le menu ou la fenêtre ouverte, sinon page précédente, sinon quitte l'appli.
 if (Capacitor.isNativePlatform()) App.addListener('backButton', ({ canGoBack }) => {
   const modal = document.getElementById('modalRoot');
   if (document.body.classList.contains('nav-open')) document.body.classList.remove('nav-open');

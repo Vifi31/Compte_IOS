@@ -1,6 +1,6 @@
 {
   "name": "comptes",
-  "version": "2.7.5",
+  "version": "2.8.0",
   "description": "Gestion des dépenses à partir des relevés La Banque Postale",
   "scripts": {
     "start": "node server.mjs",
@@ -16,6 +16,7 @@
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",
     "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.5.3",
     "@capacitor/share": "^8.0.3",
     "chart.js": "^4.5.1",
     "pdfjs-dist": "^6.3.289",

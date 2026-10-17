@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.8.0 — 2026-10-17
+- Appli iPhone : projet iOS Capacitor (même moteur local et même interface que la version Android), icônes et écran de démarrage, IPA fabriqué sur un Mac de GitHub et publié dans les Releases, installation par Sideloadly
+
 ## 2.7.5 — 2026-10-17
 - Appli Android : menu Administration limité à Sauvegardes et Base de données
 

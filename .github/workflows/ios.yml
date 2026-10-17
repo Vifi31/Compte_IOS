@@ -1,0 +1,69 @@
+# Fabrication de l'appli iPhone (IPA non signé) sur un Mac de GitHub, à chaque nouvelle version sur la branche android.
+# L'IPA est publié dans les Releases du dépôt ; il s'installe sur l'iPhone depuis le PC avec Sideloadly
+# (signature par votre identifiant Apple au moment de l'installation) : voir mobile/README.md.
+# Les Mac de GitHub décomptent 10 minutes de quota par minute pour un dépôt privé : la fabrication
+# ne part donc que lorsque la version change (package.json) ou à la demande (Actions › Run workflow).
+name: Appli iPhone
+
+on:
+  push:
+    branches: [android]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Dépendances
+        run: npm ci
+
+      - name: Moteur local et interface
+        run: |
+          npm run mobile:build
+          npx cap sync ios
+
+      - name: Compilation (sans signature)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          BUILD=$(node -p "const [a,b,c]=require('./package.json').version.split('.').map(Number); a*10000+b*100+c")
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry "Comptes-$VERSION.ipa" Payload
+
+      - name: Publication dans les Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          IPA="Comptes-$VERSION.ipa"
+          NOTES=$(awk -v v="## $VERSION " 'index($0, v) == 1 { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md)
+          TAG="ios-v$VERSION"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$IPA" --clobber
+          else
+            gh release create "$TAG" "$IPA" --target "$GITHUB_SHA" --title "Comptes $VERSION (iPhone)" --notes "${NOTES:-Version $VERSION}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Comptes-ipa
+          path: Comptes-*.ipa

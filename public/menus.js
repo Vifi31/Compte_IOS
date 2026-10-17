@@ -30,7 +30,7 @@ function navModel(cfg = menuCfg()) {
   groups.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   return groups;
 }
-// Appli Android (moteur local) : Administration réduite aux pages utiles sur le téléphone.
+// Appli mobile Android / iPhone (moteur local) : Administration réduite aux pages utiles sur le téléphone.
 const MOBILE_ADMIN = ['backups', 'db'];
 const mobileHidden = it => apiIsLocal() && it.home === 'admin' && !MOBILE_ADMIN.includes(it.id);
 const itemHidden = (it, cfg) => NAV_HIDDEN.includes(it.id) || mobileHidden(it) || (!it.locked && cfg.hidden.includes(it.id));

@@ -12,5 +12,10 @@
       "insetsHandling": "native",
       "initialViewportFitValueHint": "cover"
     }
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#1e1b4b",
+    "scrollEnabled": true
   }
 }
