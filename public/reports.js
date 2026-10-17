@@ -210,7 +210,7 @@ async function generateReport(spec) {
   const j = await r.json();
   if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); }
   toast('✅ Rapport généré : ' + j.name);
-  window.open(apiUrl('/api/reports/file?name=' + encodeURIComponent(j.name)), '_blank');
+  apiOpen('/api/reports/file?name=' + encodeURIComponent(j.name));
   return j;
 }
 

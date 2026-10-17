@@ -1,0 +1,83 @@
+# Fabrication de l'appli Android (APK) sur GitHub, à chaque envoi sur la branche android.
+# L'APK signé est publié dans les Releases du dépôt : sur le téléphone, ouvrir
+# github.com/Vifi31/Comptes/releases, télécharger Comptes-x.y.z.apk et l'ouvrir.
+# Secrets requis (Settings › Secrets and variables › Actions) :
+#   ANDROID_KEYSTORE_BASE64   fichier de clé (.jks) encodé en base64
+#   ANDROID_KEYSTORE_PASSWORD mot de passe de la clé
+name: Appli Android
+
+on:
+  push:
+    branches: [android]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Dépendances
+        run: npm ci
+
+      - name: Moteur local et interface
+        run: |
+          npm run mobile:build
+          npx cap sync android
+
+      - name: Clé de signature
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::error::Secrets ANDROID_KEYSTORE_BASE64 et ANDROID_KEYSTORE_PASSWORD absents : voir mobile/README.md"
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/comptes.jks"
+          echo "COMPTES_KEYSTORE=$RUNNER_TEMP/comptes.jks" >> "$GITHUB_ENV"
+
+      - name: APK
+        env:
+          COMPTES_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew --no-daemon assembleRelease
+
+      - name: Publication dans les Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          APK="Comptes-$VERSION.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$APK"
+          NOTES=$(awk -v v="## $VERSION " 'index($0, v) == 1 { on = 1; next } /^## / { on = 0 } on' CHANGELOG.md)
+          TAG="android-v$VERSION"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" --clobber
+          else
+            gh release create "$TAG" "$APK" --target "$GITHUB_SHA" --title "Comptes $VERSION (Android)" --notes "${NOTES:-Version $VERSION}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Comptes-apk
+          path: Comptes-*.apk

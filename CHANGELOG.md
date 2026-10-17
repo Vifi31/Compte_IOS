@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.7.3 — 2026-10-17
+- Appli Android autonome : cœur partagé (lib/app.mjs), moteur local sans serveur (SQLite WebAssembly, fichiers sur le téléphone), projet Capacitor, APK publié sur GitHub
+
 ## 2.7.2 — 2026-10-17
 - Préparation de l’appli mobile : tous les appels et liens vers l’API passent par un point d’accès unique (public/api.js)
 

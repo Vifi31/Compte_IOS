@@ -1,0 +1,9 @@
+{
+  "appId": "fr.vifi31.comptes",
+  "appName": "Comptes",
+  "webDir": "mobile/www",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

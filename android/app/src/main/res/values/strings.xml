@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Comptes</string>
+    <string name="title_activity_main">Comptes</string>
+    <string name="package_name">fr.vifi31.comptes</string>
+    <string name="custom_url_scheme">fr.vifi31.comptes</string>
+</resources>

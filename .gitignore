@@ -10,3 +10,6 @@ dist/
 setup.inf
 setup.rpt
 MANIFEST.json
+public/mobile/
+mobile/.essai/
+mobile/www/
