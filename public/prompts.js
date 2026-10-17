@@ -2,7 +2,7 @@
 // ============ Administration › Prompt : journal des demandes + modèles d'analyse IA ============
 const PR_STATUS = { 'à faire': '#f59e0b', 'en cours': '#0ea5e9', 'réalisé': '#10b981', 'annulé': '#94a3b8', 'envoyé': '#8b5cf6', 'erreur': '#ef4444' };
 async function prApi(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); } return j;
 }
 

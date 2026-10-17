@@ -205,7 +205,7 @@ async function uploadFiles(files) {
   const msgs = []; let added = 0;
   for (const f of pdfs) {
     try {
-      const r = await fetch('/api/upload?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+      const r = await apiFetch('/api/upload?name=' + encodeURIComponent(f.name), { method: 'POST', body: f });
       const j = await r.json();
       if (!r.ok) msgs.push(['⚠️', f.name, j.error]);
       else if (j.status === 'ajoute') { added++; msgs.push([j.warning ? '🟠' : '✅', j.name, `${j.ops} opérations importées${j.warning ? ' — ' + j.warning : ''}`]); }

@@ -71,7 +71,7 @@ function depChips(P, a) {
 }
 
 /** Supprime une tâche et les dépendances qui la visaient. */
-function removeAction(P, a) { fetch('/api/immo/files?aid=' + encodeURIComponent(a.id), { method: 'DELETE' }).catch(() => {}); if (S.immoFiles) delete S.immoFiles[a.id]; P.actions.splice(P.actions.indexOf(a), 1); for (const x of P.actions) if (x.deps) x.deps = x.deps.filter(d => d.id !== a.id); }
+function removeAction(P, a) { apiFetch('/api/immo/files?aid=' + encodeURIComponent(a.id), { method: 'DELETE' }).catch(() => {}); if (S.immoFiles) delete S.immoFiles[a.id]; P.actions.splice(P.actions.indexOf(a), 1); for (const x of P.actions) if (x.deps) x.deps = x.deps.filter(d => d.id !== a.id); }
 
 /** Carte « Contraintes et diagramme de Gantt » : renvoie { el, init } (init après insertion dans la page). */
 function taskGanttCard(P, today) {

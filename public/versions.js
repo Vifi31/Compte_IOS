@@ -1,7 +1,7 @@
 'use strict';
 // ============ Gestion des versions ============
 async function verApi(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json();
   if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); }
   return j;
@@ -62,7 +62,7 @@ async function pageVersions(v) {
     } }, '🔍 Changements'),
     h('button', { class: 'btn sm sec', onclick: () => editVersionPrompt(ver, journal) }, '💬 Prompt'),
     h('button', { class: 'btn sm sec', onclick: () => importanceModal(ver) }, '⚖️ Importance'),
-    h('a', { class: 'btn sm sec', href: '/api/versions/file?version=' + ver.version, style: { textDecoration: 'none' } }, '⬇️ Télécharger'),
+    h('a', { class: 'btn sm sec', href: apiUrl('/api/versions/file?version=' + ver.version), style: { textDecoration: 'none' } }, '⬇️ Télécharger'),
     ver.version !== cur ? h('button', { class: 'btn sm sec', onclick: () => restoreVersion(ver, cur) }, '⏪ Revenir à cette version') : null,
     ver.version !== cur ? h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => modal('Supprimer la version ' + ver.version + ' ?', [h('p', {}, 'L’instantané sera supprimé. Le journal des modifications est conservé.')], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn danger', onclick: () => reload(async () => { await verApi('/api/versions?version=' + ver.version, 'DELETE'); close(); toast('Version supprimée'); }) }, 'Supprimer')]) }, '🗑️') : null,
   ];
@@ -94,10 +94,10 @@ function restoreVersion(ver, cur) {
     } }, '⏪ Restaurer')]);
 }
 async function restartApp() {
-  try { await fetch('/api/restart', { method: 'POST' }); } catch { /* le serveur s'arrête */ }
+  try { await apiFetch('/api/restart', { method: 'POST' }); } catch { /* le serveur s'arrête */ }
   $('#modalRoot').innerHTML = ''; $('#view').innerHTML = ''; $('#view').append(h('div', { class: 'loading' }, 'Redémarrage en cours…'));
   const t0 = Date.now();
-  const poll = async () => { try { const r = await fetch('/api/state'); if (r.ok) return location.reload(); } catch { /* en attente */ } if (Date.now() - t0 < 90000) setTimeout(poll, 1500); else $('#view').textContent = 'Le serveur ne répond pas : relancez Comptes.bat.'; };
+  const poll = async () => { try { const r = await apiFetch('/api/state'); if (r.ok) return location.reload(); } catch { /* en attente */ } if (Date.now() - t0 < 90000) setTimeout(poll, 1500); else $('#view').textContent = 'Le serveur ne répond pas : relancez Comptes.bat.'; };
   setTimeout(poll, 3000);
 }
 

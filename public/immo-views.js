@@ -88,7 +88,7 @@ async function pageSuivi(v) {
 // ====================================================== Plan d'actions
 async function pageActions(v) {
   v.append(h('div', { class: 'loading' }, 'Chargement…')); const P = await immoLoad();
-  try { S.immoFiles = (await (await fetch('/api/immo/files/counts')).json()).counts ?? {}; } catch { S.immoFiles ??= {}; }
+  try { S.immoFiles = (await (await apiFetch('/api/immo/files/counts')).json()).counts ?? {}; } catch { S.immoFiles ??= {}; }
   v.innerHTML = ''; if (S.page !== 'immo-actions') return;
   const sim = sim0(P), today = todayIso(), A = P.actions, st = S.immoAct ??= { phase: '', statut: '' }, naSet = new Set(A.filter(a => !condState(P, sim, a).ok).map(a => a.id)), stOf = a => (naSet.has(a.id) ? 'na' : actStatus(a, today)), cnt = k => A.filter(a => stOf(a) === k).length;
   const phases = immoPhasesUsed(P), done = cnt('fait'), late = cnt('retard'), doing = cnt('encours'), afaire = cnt('afaire');

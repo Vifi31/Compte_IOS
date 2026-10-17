@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.7.2 — 2026-10-17
+- Préparation de l’appli mobile : tous les appels et liens vers l’API passent par un point d’accès unique (public/api.js)
+
 ## 2.7.1 — 2026-10-14
 - Base de données : graphiques de volume et prévision à 12 mois
 

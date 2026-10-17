@@ -173,7 +173,7 @@ function editAction(P, a, preset = {}) {
     h('div', { class: 'field' }, h('label', {}, '📎 Pièces jointes'), attachBox(d.id, n => uploaded.push(n))),
     a ? null : h('label', { style: { display: 'inline-flex', gap: '6px', alignItems: 'center', cursor: 'pointer' } }, h('input', { type: 'checkbox', onchange: e => { asModel = e.target.checked; } }), '⭐ Enregistrer comme modèle de tâche (réutilisable dans la liste « Tâche type »)'),
     h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '8px' }, onclick: () => phasesModal(P) }, '🗂️ Gérer les phases et les modèles')],
-    close => [h('button', { class: 'btn sec', onclick: () => { if (!a && uploaded.length) fetch('/api/immo/files?aid=' + encodeURIComponent(d.id), { method: 'DELETE' }); setFileCount(d.id, a ? S.immoFiles[d.id] : 0); close(); } }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
+    close => [h('button', { class: 'btn sec', onclick: () => { if (!a && uploaded.length) apiFetch('/api/immo/files?aid=' + encodeURIComponent(d.id), { method: 'DELETE' }); setFileCount(d.id, a ? S.immoFiles[d.id] : 0); close(); } }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
       if (!d.label.trim()) return toast('⚠️ Saisissez le libellé de l’action');
       d.deps = d.deps.filter(x => x.id && x.id !== d.id);
       d.conds = d.conds.filter(c => c.type !== 'tache' || (c.id && c.id !== d.id)).filter(c => c.type !== 'date' || c.date);
@@ -321,14 +321,14 @@ function attachBox(aid, track) {
     setFileCount(aid, files.length); listEl.innerHTML = '';
     if (!files.length) listEl.append(h('div', { class: 'muted', style: { fontSize: '12.5px' } }, 'Aucun fichier joint.'));
     for (const f of files) listEl.append(h('div', { class: 'attachrow' }, h('span', {}, fileIcon(f.name)),
-      h('a', { class: 'doclink', href: fileUrl(aid, f.name), target: '_blank', title: 'Ouvrir' }, f.name), h('span', { class: 'muted nw' }, fmtSize(f.size)),
-      h('a', { class: 'icon-btn', href: fileUrl(aid, f.name, true), title: 'Télécharger', style: { textDecoration: 'none' } }, '⬇️'),
-      h('button', { class: 'icon-btn', type: 'button', title: 'Supprimer ce fichier', onclick: async () => { if (!confirm('Supprimer « ' + f.name + ' » ?')) return; const r = await fetch(fileUrl(aid, f.name), { method: 'DELETE' }); const j = await r.json(); if (r.ok) draw(j.files); else toast('⚠️ ' + (j.error || 'Suppression impossible')); } }, '🗑️')));
+      h('a', { class: 'doclink', href: apiUrl(fileUrl(aid, f.name)), target: '_blank', title: 'Ouvrir' }, f.name), h('span', { class: 'muted nw' }, fmtSize(f.size)),
+      h('a', { class: 'icon-btn', href: apiUrl(fileUrl(aid, f.name, true)), title: 'Télécharger', style: { textDecoration: 'none' } }, '⬇️'),
+      h('button', { class: 'icon-btn', type: 'button', title: 'Supprimer ce fichier', onclick: async () => { if (!confirm('Supprimer « ' + f.name + ' » ?')) return; const r = await apiFetch(fileUrl(aid, f.name), { method: 'DELETE' }); const j = await r.json(); if (r.ok) draw(j.files); else toast('⚠️ ' + (j.error || 'Suppression impossible')); } }, '🗑️')));
   };
   const up = async files => {
     let n = 0; info.textContent = 'Envoi…';
     for (const f of files) {
-      const r = await fetch('/api/immo/files?aid=' + encodeURIComponent(aid) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: await f.arrayBuffer() });
+      const r = await apiFetch('/api/immo/files?aid=' + encodeURIComponent(aid) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: await f.arrayBuffer() });
       const j = await r.json(); if (r.ok) { n++; track?.(j.name); draw(j.files); } else toast('⚠️ ' + f.name + ' : ' + (j.error || 'dépôt impossible'));
     }
     info.textContent = n ? n + ' fichier(s) ajouté(s)' : '';
@@ -336,7 +336,7 @@ function attachBox(aid, track) {
   const dz = h('div', { class: 'dropzone', style: { padding: '10px' }, onclick: () => input.click(), ondragover: e => { e.preventDefault(); dz.classList.add('hover'); }, ondragleave: () => dz.classList.remove('hover'),
     ondrop: e => { e.preventDefault(); dz.classList.remove('hover'); up([...e.dataTransfer.files]); } }, h('b', {}, '📎 Ajouter des fichiers'), h('span', { class: 'muted' }, 'Glissez-les ici ou cliquez : devis, contrats, courriers, photos… (25 Mo max chacun)'), input);
   box.append(dz, info, listEl);
-  fetch('/api/immo/files?aid=' + encodeURIComponent(aid)).then(r => r.json()).then(j => draw(j.files ?? [])).catch(() => draw([]));
+  apiFetch('/api/immo/files?aid=' + encodeURIComponent(aid)).then(r => r.json()).then(j => draw(j.files ?? [])).catch(() => draw([]));
   return box;
 }
 /** Fenêtre des pièces jointes d'une action (depuis le badge 📎 d'une ligne). */

@@ -13,7 +13,7 @@ function ago(iso) {
 const inFuture = iso => { const s = (new Date(iso) - Date.now()) / 1000; return s <= 60 ? 'imminente' : s < 3600 ? `dans ${Math.round(s / 60)} min` : s < 86400 ? `dans ${Math.round(s / 3600)} h` : `dans ${Math.round(s / 86400)} j`; };
 
 async function bkApi(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json();
   if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); }
   return j;
@@ -69,7 +69,7 @@ async function pageBackups(v) {
   // ---- liste
   const file = h('input', { type: 'file', accept: '.zip', style: { display: 'none' }, onchange: async () => {
     const f = file.files[0]; if (!f) return;
-    const r = await fetch('/api/backups/import?name=' + encodeURIComponent(f.name), { method: 'POST', body: f }); const j = await r.json();
+    const r = await apiFetch('/api/backups/import?name=' + encodeURIComponent(f.name), { method: 'POST', body: f }); const j = await r.json();
     if (!r.ok) return toast('⚠️ ' + j.error); toast('✅ Sauvegarde importée : ' + j.imported); render();
   } });
   const rows = list.map(b => {
@@ -82,7 +82,7 @@ async function pageBackups(v) {
       h('td', { class: 'muted num' }, m ? `${m.files} fichiers` : '', h('div', { class: 'sub' }, c.operations != null ? `${c.operations} op. · ${c.statements} relevés · ${c.categories} cat. · ${c.rules} règles` : '')),
       h('td', { class: 'r num' }, fmtBytes(b.size), m ? h('div', { class: 'sub' }, 'brut ' + fmtBytes(m.rawSize)) : null),
       h('td', { class: 'r', style: { whiteSpace: 'nowrap' } },
-        h('a', { class: 'icon-btn', title: 'Télécharger', href: '/api/backups/file?name=' + encodeURIComponent(b.name), style: { textDecoration: 'none' } }, '⬇️'),
+        h('a', { class: 'icon-btn', title: 'Télécharger', href: apiUrl('/api/backups/file?name=' + encodeURIComponent(b.name)), style: { textDecoration: 'none' } }, '⬇️'),
         h('button', { class: 'icon-btn', title: 'Vérifier l’intégrité', onclick: async () => { const r = await bkApi('/api/backups/verify', 'POST', { name: b.name }); toast(r.ok ? `✅ Intègre (${r.entries} fichiers)` : '⚠️ Corrompue : ' + r.bad.join(', ')); } }, '🔍'),
         m && m.type !== 'program' ? h('button', { class: 'icon-btn', title: 'Restaurer', onclick: () => restoreBackup(b) }, '♻️') : null,
         h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => modal('Supprimer cette sauvegarde ?', [h('p', {}, b.name + ' (' + fmtBytes(b.size) + ') sera définitivement supprimée.')], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn danger', onclick: async () => { await bkApi('/api/backups?name=' + encodeURIComponent(b.name), 'DELETE'); close(); toast('Sauvegarde supprimée'); render(); } }, 'Supprimer')]) }, '🗑️')));

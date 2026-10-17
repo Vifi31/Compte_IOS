@@ -206,18 +206,18 @@ function pdfOptionsAsk(spec) {
 async function generateReport(spec) {
   const opts = await pdfOptionsAsk(spec); if (!opts) return null;
   spec = { ...spec, ...opts };
-  const r = await fetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) });
+  const r = await apiFetch('/api/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(spec) });
   const j = await r.json();
   if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); }
   toast('✅ Rapport généré : ' + j.name);
-  window.open('/api/reports/file?name=' + encodeURIComponent(j.name), '_blank');
+  window.open(apiUrl('/api/reports/file?name=' + encodeURIComponent(j.name)), '_blank');
   return j;
 }
 
 const appendNN = (el, ...k) => el.append(...k.filter(x => x != null && x !== false));
 async function pageReports(v) {
   v.append(h('div', { class: 'loading' }, 'Chargement…'));
-  let { list } = await (await fetch('/api/reports')).json();
+  let { list } = await (await apiFetch('/api/reports')).json();
   v.innerHTML = '';
   if (S.page !== 'reports') return;
   S.rp ??= { group: 'date', internal: false, fyear: forecastYears().slice(-1)[0] };
@@ -248,7 +248,7 @@ async function pageReports(v) {
   const url = (f, dl) => '/api/reports/file?' + (dl ? 'download=1&' : '') + 'name=' + encodeURIComponent(f.name);
   const titleOf = f => f.title || f.name.replace(/_\d{8}-\d{6}\.pdf$/i, '').replace(/[-_]+/g, ' ');
   const fmtOf = f => f.paper ? f.paper + ' · ' + (f.layout === 'landscape' ? 'paysage' : 'portrait') + (f.charts === false ? ' · sans graph.' : '') : '–';
-  const post = async (u, body) => { const r = await fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); } return j; };
+  const post = async (u, body) => { const r = await apiFetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); } return j; };
   const COLS = [['title', 'Rapport', ''], ['name', 'Fichier', ''], ['format', 'Format', ''], ['mtime', 'Date', ''], ['size', 'Taille', 'r']];
   const rl = () => {
     const q = RL.q.trim().toLowerCase();
@@ -269,14 +269,14 @@ async function pageReports(v) {
       h('td', { class: 'muted', style: { fontSize: '12.5px' } }, f.name), h('td', { class: 'muted', style: { whiteSpace: 'nowrap', fontSize: '12.5px' } }, fmtOf(f)),
       h('td', { class: 'muted num', style: { whiteSpace: 'nowrap' } }, fmtDT(f.mtime)), h('td', { class: 'r num' }, fmtBytes(f.size)),
       h('td', { class: 'r', style: { whiteSpace: 'nowrap' } },
-        h('a', { class: 'icon-btn', title: 'Ouvrir', target: '_blank', href: url(f), style: { textDecoration: 'none' } }, '👁️'),
-        h('a', { class: 'icon-btn', title: 'Télécharger', href: url(f, true), style: { textDecoration: 'none' } }, '⬇️'),
+        h('a', { class: 'icon-btn', title: 'Ouvrir', target: '_blank', href: apiUrl(url(f)), style: { textDecoration: 'none' } }, '👁️'),
+        h('a', { class: 'icon-btn', title: 'Télécharger', href: apiUrl(url(f, true)), style: { textDecoration: 'none' } }, '⬇️'),
         h('button', { class: 'icon-btn', title: 'Renommer', onclick: () => rename(f) }, '✏️'),
         h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => del([f.name]) }, '🗑️')));
     const bulk = nSel ? h('div', { class: 'tip', style: { display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', margin: '0 0 12px' } },
       h('b', {}, nSel + ' sélectionné' + (nSel > 1 ? 's' : '')), h('span', { class: 'muted' }, fmtBytes(selSize)),
-      h('a', { class: 'btn sm', style: { textDecoration: 'none' }, href: '/api/reports/zip?names=' + encodeURIComponent([...RL.sel].join('|')) }, '⬇️ Télécharger (ZIP)'),
-      nSel === 1 ? h('a', { class: 'btn sm sec', style: { textDecoration: 'none' }, target: '_blank', href: url({ name: [...RL.sel][0] }) }, '👁️ Ouvrir') : null,
+      h('a', { class: 'btn sm', style: { textDecoration: 'none' }, href: apiUrl('/api/reports/zip?names=' + encodeURIComponent([...RL.sel].join('|'))) }, '⬇️ Télécharger (ZIP)'),
+      nSel === 1 ? h('a', { class: 'btn sm sec', style: { textDecoration: 'none' }, target: '_blank', href: apiUrl(url({ name: [...RL.sel][0] })) }, '👁️ Ouvrir') : null,
       h('button', { class: 'btn sm sec', style: { color: '#dc2626' }, onclick: () => del([...RL.sel]) }, '🗑️ Supprimer'),
       h('button', { class: 'btn sm sec', onclick: () => { RL.sel.clear(); rl(); } }, 'Tout désélectionner')) : null;
     const th = ([k, l, c]) => h('th', { class: c, style: { cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }, title: 'Trier par cette colonne', onclick: () => { if (RL.key === k) RL.dir = -RL.dir; else { RL.key = k; RL.dir = k === 'mtime' || k === 'size' ? -1 : 1; } rl(); } }, l + (RL.key === k ? (RL.dir > 0 ? ' ▲' : ' ▼') : ' ↕'));

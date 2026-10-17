@@ -103,7 +103,7 @@ function aiParse(text) {
 
 async function pageImmoAI(v) {
   v.append(h('div', { class: 'loading' }, 'Chargement…'));
-  const [P, dis, hist] = await Promise.all([immoLoad(), fetch('/api/ai/settings').then(r => r.json()), fetch('/api/ai/history').then(r => r.json())]);
+  const [P, dis, hist] = await Promise.all([immoLoad(), apiFetch('/api/ai/settings').then(r => r.json()), apiFetch('/api/ai/history').then(r => r.json())]);
   v.innerHTML = ''; if (S.page !== 'immo-ai') return;
   const sim = immoSimulate(P), D = immoAiData(P, sim), s = sim.summary, H = immoHealth(sim, P), isLocalProv = dis.provider === 'local', isOllama = !!dis.providers[dis.provider]?.localModel, provLabel = dis.providers[dis.provider].label;
   const mine = hist.list.filter(e => e.meta?.immo);
@@ -131,13 +131,13 @@ async function pageImmoAI(v) {
   const consent = h('input', { type: 'checkbox', checked: imaiConsent, onchange: e => { imaiConsent = e.target.checked; runBtn.disabled = !isLocalProv && !isOllama && !imaiConsent; } });
   const meta = () => ({ immo: true, focus: IMAI_FOCUS[imaiFocus], periode: `${fdate(P.dateReference)} → ${fdate(sim.summary.endDate)}`, comptes: 'Projet VEFA' });
   const saveLocal = async () => {
-    const r = await (await fetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Analyse locale · projet VEFA', text: immoLocalAnalysis(P, sim, imaiFocus), meta: meta() }) })).json();
+    const r = await (await apiFetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Analyse locale · projet VEFA', text: immoLocalAnalysis(P, sim, imaiFocus), meta: meta() }) })).json();
     imaiCurrent = r.analysis; toast('Analyse locale terminée'); render();
   };
   const run = async () => {
     runBtn.disabled = true; runBtn.textContent = '⏳ Analyse en cours… (peut durer plusieurs minutes avec un modèle local)';
     try {
-      const j = await (await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: IMAI_SYSTEM, user: immoAiFill(IMAI_USER, imaiFocus, D), title: 'Analyse IA · projet VEFA', meta: meta() }) })).json();
+      const j = await (await apiFetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: IMAI_SYSTEM, user: immoAiFill(IMAI_USER, imaiFocus, D), title: 'Analyse IA · projet VEFA', meta: meta() }) })).json();
       if (j.error) throw new Error(j.error); imaiCurrent = j.analysis; toast('✅ Analyse terminée'); render();
     } catch (e) { toast('⚠️ ' + e.message); runBtn.disabled = false; runBtn.textContent = '🧠 Lancer l’analyse IA'; }
   };
@@ -169,5 +169,5 @@ async function pageImmoAI(v) {
     mine.length ? h('div', { class: 'legend', style: { maxHeight: 'none' } }, mine.map(e => h('div', { class: 'lrow', style: { gridTemplateColumns: '34px 1fr auto auto' }, onclick: () => { imaiCurrent = e; render(); window.scrollTo(0, 0); } },
       h('div', { class: 'bubble', style: { background: tint(e.kind === 'ia' ? '#8b5cf6' : '#0ea5e9', .18) } }, e.kind === 'ia' ? '🧠' : '📊'),
       h('div', {}, h('div', { class: 'name' }, e.title), h('div', { class: 'muted', style: { fontSize: '12px' } }, `${fmtDT(e.date)} · ${e.kind === 'ia' ? (e.model || e.provider) : 'analyse locale'}${e.meta?.focus ? ' · ' + e.meta.focus : ''}`)), pill(e.kind === 'ia' ? 'IA' : 'locale', e.kind === 'ia' ? IMC.violet : IMC.blue),
-      h('button', { class: 'btn sm sec', title: 'Supprimer', onclick: async ev => { ev.stopPropagation(); if (!confirm('Supprimer cette analyse ?')) return; await fetch('/api/ai/history?id=' + e.id, { method: 'DELETE' }); if (imaiCurrent?.id === e.id) imaiCurrent = null; render(); } }, '🗑')))) : h('div', { class: 'muted' }, 'Aucune analyse pour le moment.')));
+      h('button', { class: 'btn sm sec', title: 'Supprimer', onclick: async ev => { ev.stopPropagation(); if (!confirm('Supprimer cette analyse ?')) return; await apiFetch('/api/ai/history?id=' + e.id, { method: 'DELETE' }); if (imaiCurrent?.id === e.id) imaiCurrent = null; render(); } }, '🗑')))) : h('div', { class: 'muted' }, 'Aucune analyse pour le moment.')));
 }

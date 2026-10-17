@@ -1,7 +1,7 @@
 'use strict';
 // ============ Administration › Modèle : paramétrage réutilisable (sans données personnelles) ============
 async function mdApi(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); } return j;
 }
 
@@ -23,7 +23,7 @@ async function pageModel(v) {
       h('div', { class: 'field', style: { marginTop: '12px' } }, h('label', {}, 'Contenu du modèle'), secList(st.sel, (k, on) => { on ? st.sel.add(k) : st.sel.delete(k); })),
       h('div', { class: 'toolbar', style: { margin: '14px 0 0' } }, h('button', { class: 'btn', onclick: async () => {
         if (!st.sel.size) return toast('Choisissez au moins un élément');
-        const r = await fetch('/api/model/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: st.name, description: st.description, sections: [...st.sel] }) });
+        const r = await apiFetch('/api/model/export', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: st.name, description: st.description, sections: [...st.sel] }) });
         const blob = await r.blob(); const file = 'modele-' + (st.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'comptes') + '.json';
         const a = h('a', { href: URL.createObjectURL(blob), download: file }); document.body.append(a); a.click(); a.remove(); toast('✅ Modèle exporté : ' + file);
       } }, '⬇ Exporter le modèle (.json)'))),

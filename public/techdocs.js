@@ -159,7 +159,7 @@ async function svgToPng(svg, width = 2000) {
 // ---------- page
 async function pageTechDocs(v) {
   v.append(h('div', { class: 'loading' }, 'Analyse des sources…'));
-  let T; try { T = await (await fetch('/api/techinfo')).json(); } catch { T = null; }
+  let T; try { T = await (await apiFetch('/api/techinfo')).json(); } catch { T = null; }
   v.innerHTML = ''; if (S.page !== 'techdocs') return;
   T ??= { version: S.data.version, node: '?', platform: '?', dependencies: {}, files: [], routes: [], totals: { files: 0, lines: 0, server: 0, front: 0, installer: 0, routes: 0 }, storeKeys: [] };
   const tt = T.totals, deps = Object.keys(T.dependencies);

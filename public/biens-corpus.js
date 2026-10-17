@@ -14,7 +14,7 @@ function corpusCard(b) {
   async function load(reindex) {
     info.textContent = reindex ? 'Indexation en cours…' : 'Chargement…';
     try {
-      const j = await (await fetch('/api/biens/corpus?bien=' + (cpAll ? 'all' : encodeURIComponent(b.id)) + '&q=' + encodeURIComponent(cpQ.trim()) + (reindex ? '&reindex=1' : ''))).json();
+      const j = await (await apiFetch('/api/biens/corpus?bien=' + (cpAll ? 'all' : encodeURIComponent(b.id)) + '&q=' + encodeURIComponent(cpQ.trim()) + (reindex ? '&reindex=1' : ''))).json();
       if (j.error) throw new Error(j.error);
       const docs = j.docs ?? [], pages = sum(docs.map(d => d.pages || 0)), chars = sum(docs.map(d => d.chars || 0)), scans = docs.filter(d => d.scan).length;
       info.textContent = cpQ.trim() ? `${docs.length} document(s) contiennent « ${cpQ.trim()} »` : `${docs.length} document(s) · ${pages} page(s) · ${(chars / 1000).toFixed(0)} k caractères indexés${scans ? ' · ' + scans + ' sans texte (scan)' : ''}${j.pending ? ' · ' + j.pending + ' à indexer (relancez)' : ''}`;
@@ -26,12 +26,12 @@ function corpusCard(b) {
           const url = '/api/biens/' + encodeURIComponent(d.bien) + '/documents?name=' + encodeURIComponent(d.name);
           const note = h('input', { type: 'text', value: d.note || '', maxlength: 300, placeholder: 'Ajouter une note…', style: { width: '100%', minWidth: '150px' }, onchange: async e => {
             const bb = bienOf(d.bien); if (!bb) return; const notes = { ...(bb.docNotes ?? {}) }; if (e.target.value.trim()) notes[d.name] = e.target.value; else delete notes[d.name]; bb.docNotes = notes;
-            const r = await fetch('/api/biens/' + encodeURIComponent(bb.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ docNotes: notes }) }); const jj = await r.json(); if (jj.items) BS = jj; } });
+            const r = await apiFetch('/api/biens/' + encodeURIComponent(bb.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ docNotes: notes }) }); const jj = await r.json(); if (jj.items) BS = jj; } });
           const ex = h('td', { style: { fontSize: '12px', maxWidth: '420px' } }); ex.innerHTML = d.excerpts.map(x => '<div>' + hl(x, cpQ) + '</div>').join('');
           return h('tr', {}, ...(cpAll ? [h('td', {}, d.icone + ' ' + d.bienNom)] : []),
-            h('td', {}, h('b', {}, docKindIcon(d.kind)), ' ', h('a', { class: 'doclink', href: url, target: '_blank' }, d.name)), h('td', {}, docKindLabel(d.kind)),
+            h('td', {}, h('b', {}, docKindIcon(d.kind)), ' ', h('a', { class: 'doclink', href: apiUrl(url), target: '_blank' }, d.name)), h('td', {}, docKindLabel(d.kind)),
             h('td', { class: 'r num' }, d.error ? '⚠️' : String(d.pages)), h('td', { class: 'r num ' + (d.scan || d.error ? 'neg' : '') , title: d.error || (d.scan ? 'Aucun texte : PDF scanné (image)' : '') }, d.error ? 'illisible' : d.scan ? 'scan' : (d.chars / 1000).toFixed(1) + ' k'),
-            ...(cpQ.trim() ? [h('td', { class: 'r num' }, String(d.hits)), ex] : []), h('td', {}, note), h('td', { class: 'r' }, h('a', { class: 'icon-btn', title: 'Ouvrir', href: url, target: '_blank', style: { textDecoration: 'none' } }, '👁️')));
+            ...(cpQ.trim() ? [h('td', { class: 'r num' }, String(d.hits)), ex] : []), h('td', {}, note), h('td', { class: 'r' }, h('a', { class: 'icon-btn', title: 'Ouvrir', href: apiUrl(url), target: '_blank', style: { textDecoration: 'none' } }, '👁️')));
         })))));
     } catch (e) { info.textContent = '⚠️ ' + (e.message || e); }
   }

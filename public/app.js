@@ -27,7 +27,7 @@ const tint = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0')
 const toast = msg => { const t = h('div', { class: 'toast' }, msg); $('#toasts').append(t); setTimeout(() => t.remove(), 2600); };
 
 async function api(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json();
   if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); }
   return j;

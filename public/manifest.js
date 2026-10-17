@@ -1,7 +1,7 @@
 'use strict';
 // ============ Administration › Manifeste ============
 async function mfApi(path, method = 'GET', body) {
-  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const r = await apiFetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Erreur')); throw new Error(j.error); } return j;
 }
 
@@ -23,7 +23,7 @@ async function pageManifest(v) {
     h('div', { class: 'toolbar', style: { margin: 0 } },
       h('button', { class: 'btn', onclick: async () => { const r = await mfApi('/api/manifest/write', 'POST'); toast(`✅ ${r.written} généré (${r.files} fichiers)`); st.verify = null; render(); } }, '💾 Générer / mettre à jour MANIFEST.json'),
       h('button', { class: 'btn sec', onclick: async () => { st.verify = await mfApi('/api/manifest/verify', 'POST'); render(); } }, '🔍 Vérifier l’intégrité'),
-      h('a', { class: 'btn sec', href: '/api/manifest/download', style: { textDecoration: 'none' } }, '⬇ Télécharger (JSON)'),
+      h('a', { class: 'btn sec', href: apiUrl('/api/manifest/download'), style: { textDecoration: 'none' } }, '⬇ Télécharger (JSON)'),
       pdfBtn('📄 Exporter en PDF', () => exportManifestPdf(M, sv)))));
 
   if (st.verify) {

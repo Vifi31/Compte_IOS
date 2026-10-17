@@ -7,7 +7,7 @@ const bColors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#0ea5e9
 
 async function biensLoad() {
   if (BS) return BS;
-  BS = await (await fetch('/api/biens')).json();
+  BS = await (await apiFetch('/api/biens')).json();
   setTimeout(() => bienMemoCats().then(n => { if (n) render(); }).catch(() => {}), 0);
   if (S.bi == null) S.bi = localStorage.getItem('bienId') || null;
   if (S.bi && !bienOf(S.bi)) S.bi = null;
@@ -15,7 +15,7 @@ async function biensLoad() {
   return BS;
 }
 async function bienPut(b) {
-  const r = await fetch('/api/biens/' + encodeURIComponent(b.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+  const r = await apiFetch('/api/biens/' + encodeURIComponent(b.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Enregistrement impossible')); return; }
   BS = j;
 }
@@ -30,7 +30,7 @@ async function bienMemoCats() {
   return n;
 }
 async function bienPost(b) {
-  const r = await fetch('/api/biens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+  const r = await apiFetch('/api/biens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Création impossible')); return null; }
   BS = j; S.bi = j.created; localStorage.setItem('bienId', S.bi); return bienOf(S.bi);
 }
@@ -306,7 +306,7 @@ function bDocsCard(b) {
     h('span', { class: 'muted' }, 'Acte, diagnostics, quittances, factures de travaux, avis d’imposition…'), input);
   const setKind = (doc, kind) => {
     b.docKinds = { ...(b.docKinds ?? {}), [doc.name]: kind };
-    fetch('/api/biens/' + encodeURIComponent(b.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ docKinds: b.docKinds }) })
+    apiFetch('/api/biens/' + encodeURIComponent(b.id), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ docKinds: b.docKinds }) })
       .then(r => r.json()).then(j => { if (j.items) BS = j; else toast('⚠️ ' + (j.error || 'Enregistrement impossible')); render(); }).catch(() => toast('⚠️ Enregistrement impossible'));
   };
   const list = docs.length ? h('div', { class: 'tablewrap' }, h('table', {},
@@ -320,8 +320,8 @@ function bDocsCard(b) {
         h('td', { class: 'r muted', style: { width: '80px' } }, fmtBytes(d.size)),
         h('td', { class: 'muted num', style: { width: '110px' } }, fdate(d.at.slice(0, 10))),
         h('td', { class: 'r', style: { whiteSpace: 'nowrap', width: '100px' } },
-          h('a', { class: 'icon-btn', title: 'Ouvrir', target: '_blank', href: url, style: { textDecoration: 'none' } }, '👁️'),
-          h('a', { class: 'icon-btn', title: 'Télécharger', href: url + '&download=1', style: { textDecoration: 'none' } }, '⬇️'),
+          h('a', { class: 'icon-btn', title: 'Ouvrir', target: '_blank', href: apiUrl(url), style: { textDecoration: 'none' } }, '👁️'),
+          h('a', { class: 'icon-btn', title: 'Télécharger', href: apiUrl(url + '&download=1'), style: { textDecoration: 'none' } }, '⬇️'),
           h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => { if (!confirm('Supprimer « ' + d.name + ' » ?')) return; delDoc(b, d.name); } }, '🗑️')));
     })))) : h('div', { class: 'muted', style: { fontSize: '12.5px' } }, 'Aucun document pour ce bien.');
   const upSel = h('select', { title: 'Nature appliquée aux prochains PDF déposés', onchange: e => { bUpKind = e.target.value; } }, docKinds().map(k => h('option', { value: k.id, selected: bUpKind === k.id }, k.icon + ' ' + k.label)));
@@ -336,25 +336,25 @@ function bDocsCard(b) {
 async function uploadDocs(b, files) {
   for (const f of files) {
     if (!/\.pdf$/i.test(f.name)) { toast('⚠️ ' + f.name + ' : ce n’est pas un PDF'); continue; }
-    const r = await fetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?kind=' + encodeURIComponent(bUpKind) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: await f.arrayBuffer() });
+    const r = await apiFetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?kind=' + encodeURIComponent(bUpKind) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: await f.arrayBuffer() });
     const j = await r.json();
     if (!r.ok) toast('⚠️ ' + (j.error || 'Dépôt impossible')); else toast('📥 ' + (j.name || f.name) + ' déposé');
   }
-  BS = await (await fetch('/api/biens')).json(); render();
+  BS = await (await apiFetch('/api/biens')).json(); render();
 }
 /** Suppression groupée de documents (confirmation unique). */
 async function delDocs(b, names) {
   if (!names.length || !confirm(`Supprimer définitivement ${names.length} document${names.length > 1 ? 's' : ''} ?\n\n` + names.slice(0, 12).join('\n') + (names.length > 12 ? '\n…' : ''))) return;
   let ok = 0, last = null;
   for (const n of names) {
-    const r = await fetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?name=' + encodeURIComponent(n), { method: 'DELETE' });
+    const r = await apiFetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?name=' + encodeURIComponent(n), { method: 'DELETE' });
     const j = await r.json(); if (r.ok) { ok++; last = j; } else toast('⚠️ ' + n + ' : ' + (j.error || 'suppression impossible'));
   }
   if (last?.items) BS = last; bDocSel = new Set();
   toast(`🗑️ ${ok} document${ok > 1 ? 's' : ''} supprimé${ok > 1 ? 's' : ''}`); render();
 }
 async function delDoc(b, name) {
-  const r = await fetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?name=' + encodeURIComponent(name), { method: 'DELETE' });
+  const r = await apiFetch('/api/biens/' + encodeURIComponent(b.id) + '/documents?name=' + encodeURIComponent(name), { method: 'DELETE' });
   const j = await r.json(); if (!r.ok) toast('⚠️ ' + (j.error || 'Suppression impossible')); else toast('🗑️ Document supprimé');
   BS = j.items ? j : BS; render();
 }
@@ -378,7 +378,7 @@ function bienEditModal(b) {
     if (!nom && !cp) { geoOut.textContent = '❌ Renseignez la ville ou le code postal avant de lancer la recherche.'; return; }
     geoOut.textContent = '⏳ Recherche de la commune…';
     try {
-      const j = await (await fetch('/api/biens/communes?nom=' + encodeURIComponent(nom) + '&cp=' + encodeURIComponent(cp))).json();
+      const j = await (await apiFetch('/api/biens/communes?nom=' + encodeURIComponent(nom) + '&cp=' + encodeURIComponent(cp))).json();
       if (j.error) { geoOut.textContent = '❌ ' + j.error; return; }
       if (!j.list?.length) { geoOut.textContent = '❌ Aucune commune trouvée : vérifiez le nom ou le code postal.'; return; }
       geoOut.textContent = '📍 Choisissez la commune correspondant à votre bien :';
@@ -458,7 +458,7 @@ function bienDeleteModal(b) {
     h('div', { class: 'tip warn' }, 'Pensez à faire une sauvergarde « Données » avant si vous souhaitez conserver une copie.'),
   ], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'),
     h('button', { class: 'btn danger', onclick: async () => {
-      const r = await fetch('/api/biens/' + encodeURIComponent(b.id), { method: 'DELETE' }); const j = await r.json();
+      const r = await apiFetch('/api/biens/' + encodeURIComponent(b.id), { method: 'DELETE' }); const j = await r.json();
       BS = j; S.bi = biensAll()[0]?.id ?? null; localStorage.setItem('bienId', S.bi ?? '');
       close(); toast('Bien supprimé'); location.hash = '#/biens'; render();
     } }, 'Supprimer')]);
@@ -578,7 +578,7 @@ function bKindsModal() {
   draw();
   modal('🏷️ Catégories de documents', [h('p', { class: 'muted', style: { margin: '0 0 10px' } }, 'Ces catégories servent à classer les PDF de tous vos biens. Renommer une catégorie met à jour les documents déjà classés ; en supprimer une les replace en « Autre ».'), box],
     close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: async () => {
-      const r = await fetch('/api/biens/kinds', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kinds: list }) });
+      const r = await apiFetch('/api/biens/kinds', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kinds: list }) });
       const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Enregistrement impossible')); return; }
       BS = j; close(); toast('🏷️ Catégories enregistrées'); render();
     } }, 'Enregistrer')]);

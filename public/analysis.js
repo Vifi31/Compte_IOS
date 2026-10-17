@@ -145,8 +145,8 @@ function analysisToPdf(entry, D) {
 let anCurrent = null; // { entry, D }
 async function pageAnalyse(v) {
   S.an ??= anDefaults();
-  const an = S.an, ms = allMonths(), dis = (await (await fetch('/api/ai/settings')).json());
-  const hist = (await (await fetch('/api/ai/history')).json()).list;
+  const an = S.an, ms = allMonths(), dis = (await (await apiFetch('/api/ai/settings')).json());
+  const hist = (await (await apiFetch('/api/ai/history')).json()).list;
   v.innerHTML = '';
   if (S.page !== 'analyse') return;
   const set = patch => { Object.assign(an, patch); if (an.from > an.to) [an.from, an.to] = [an.to, an.from]; render(); };
@@ -185,7 +185,7 @@ async function pageAnalyse(v) {
     isOllama ? h('div', { class: 'tip', style: { marginBottom: '12px' } }, '🔒 Modèle local : les données restent sur votre ordinateur.') : null,
     h('div', { class: 'toolbar', style: { margin: 0 } }, runBtn,
       h('button', { class: 'btn sec', onclick: () => previewPrompt(an, D) }, '👁️ Aperçu de ce qui sera envoyé'),
-      h('button', { class: 'btn sec', onclick: async () => { const text = localAnalysis(D, an.focus); const r = await (await fetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: anTitle('Analyse locale', an, D), text, meta: anMeta(an, D) }) })).json(); anCurrent = { entry: r.analysis, D }; toast('Analyse locale terminée'); render(); } }, '📊 Analyse locale rapide'))));
+      h('button', { class: 'btn sec', onclick: async () => { const text = localAnalysis(D, an.focus); const r = await (await apiFetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: anTitle('Analyse locale', an, D), text, meta: anMeta(an, D) }) })).json(); anCurrent = { entry: r.analysis, D }; toast('Analyse locale terminée'); render(); } }, '📊 Analyse locale rapide'))));
 
   // résultat courant
   if (anCurrent) v.append(resultCard(anCurrent.entry, anCurrent.D, false));
@@ -195,7 +195,7 @@ async function pageAnalyse(v) {
       h('div', { class: 'bubble', style: { background: tint(e.kind === 'ia' ? '#8b5cf6' : '#0ea5e9', .18) } }, e.kind === 'ia' ? '🧠' : '📊'),
       h('div', {}, h('div', { class: 'name' }, e.title), h('div', { class: 'muted', style: { fontSize: '12px' } }, `${fmtDT(e.date)} · ${e.kind === 'ia' ? (e.model || e.provider) : 'analyse locale'}`)),
       h('span', { class: 'badge' }, 'Ouvrir'),
-      h('button', { class: 'icon-btn', title: 'Supprimer', onclick: async ev => { ev.stopPropagation(); await fetch('/api/ai/history?id=' + e.id, { method: 'DELETE' }); if (anCurrent?.entry.id === e.id) anCurrent = null; render(); } }, '🗑️')))) : h('div', { class: 'empty' }, 'Aucune analyse enregistrée.')));
+      h('button', { class: 'icon-btn', title: 'Supprimer', onclick: async ev => { ev.stopPropagation(); await apiFetch('/api/ai/history?id=' + e.id, { method: 'DELETE' }); if (anCurrent?.entry.id === e.id) anCurrent = null; render(); } }, '🗑️')))) : h('div', { class: 'empty' }, 'Aucune analyse enregistrée.')));
 }
 const anTitle = (kind, an, D) => D.type === 'pluriannuelle' ? `${kind} pluriannuelle · ${multiLabel(D)}` : `${kind} · ${anPeriodLabel(an.from, an.to)}`;
 const anMeta = (an, D) => D.type === 'pluriannuelle' ? { periode: 'Années ' + multiLabel(D), comptes: anScopeLabel(an.scope), multi: true, focus: an.focus, scopeRaw: an.scope } : metaOf(an);
@@ -215,7 +215,7 @@ function resultCard(entry, D, fresh) {
 }
 
 async function previewPrompt(an, D) {
-  const pr = await (await fetch('/api/prompts')).json(), { system, user } = fillTemplates(pr.templates, an, D);
+  const pr = await (await apiFetch('/api/prompts')).json(), { system, user } = fillTemplates(pr.templates, an, D);
   modal('Aperçu de ce qui sera envoyé', [
     h('p', { class: 'muted', style: { margin: 0 } }, 'Voici exactement le contenu transmis au fournisseur d’IA. Les modèles se modifient dans Administration › Prompt.'),
     h('div', { class: 'field' }, h('label', {}, 'Consigne système'), h('pre', { class: 'difflist', style: { whiteSpace: 'pre-wrap' } }, system)),
@@ -230,8 +230,8 @@ function fillTemplates(t, an, D) {
 async function runAiAnalysis(an, D, dis, btn) {
   btn.disabled = true; btn.textContent = '⏳ Analyse en cours…';
   try {
-    const pr = await (await fetch('/api/prompts')).json(), { system, user } = fillTemplates(pr.templates, an, D);
-    const r = await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, user, title: anTitle('Analyse IA', an, D), meta: { ...anMeta(an, D), scopeRaw: an.scope } }) });
+    const pr = await (await apiFetch('/api/prompts')).json(), { system, user } = fillTemplates(pr.templates, an, D);
+    const r = await apiFetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system, user, title: anTitle('Analyse IA', an, D), meta: { ...anMeta(an, D), scopeRaw: an.scope } }) });
     const j = await r.json(); if (!r.ok) throw new Error(j.error || 'Erreur');
     anCurrent = { entry: j.analysis, D }; toast('✅ Analyse terminée'); render();
   } catch (e) { toast('⚠️ ' + e.message); btn.disabled = false; btn.textContent = '🧠 Lancer l’analyse IA'; }
@@ -239,7 +239,7 @@ async function runAiAnalysis(an, D, dis, btn) {
 
 // ============ Paramètres IA ============
 async function pageAISettings(v) {
-  const dis = await (await fetch('/api/ai/settings')).json();
+  const dis = await (await apiFetch('/api/ai/settings')).json();
   v.innerHTML = ''; if (S.page !== 'ai') return;
   const d = { provider: dis.provider, model: dis.model, endpoint: dis.endpoint, maxTokens: dis.maxTokens };
   const GROUPS = [['local', '🧮 Sans IA externe'], ['free-local', '💻 Gratuits en local — vos données ne quittent pas votre PC'], ['free-api', '🆓 Offres gratuites en ligne — clé gratuite, quotas limités'], ['paid', '💳 Services payants']];
@@ -253,7 +253,7 @@ async function pageAISettings(v) {
     const p = dis.providers[d.provider], prov = d.provider;
     statusBox.innerHTML = ''; if (!p?.localModel) return;
     statusBox.append(h('div', { class: 'muted', style: { marginTop: '12px' } }, '⏳ Recherche du service local…'));
-    let r; try { r = await (await fetch('/api/ai/models?provider=' + prov + '&endpoint=' + encodeURIComponent(d.endpoint || ''))).json(); } catch { r = { ok: false, error: 'Requête impossible' }; }
+    let r; try { r = await (await apiFetch('/api/ai/models?provider=' + prov + '&endpoint=' + encodeURIComponent(d.endpoint || ''))).json(); } catch { r = { ok: false, error: 'Requête impossible' }; }
     if (S.page !== 'ai' || d.provider !== prov) return;
     statusBox.innerHTML = '';
     const retry = h('button', { class: 'btn sm sec', onclick: loadLocal }, '↻ Actualiser');
@@ -274,10 +274,10 @@ async function pageAISettings(v) {
         if (!confirm('Télécharger le modèle « ' + name + ' » depuis le catalogue Ollama ?\n\nLe téléchargement peut représenter plusieurs Go.')) return;
         const bar = h('div', { class: 'progress', style: { '--c': 'var(--primary)' } }, h('i', { style: { width: '3%' } })), label = h('div', { class: 'muted', style: { fontSize: '12.5px', marginTop: '4px' } }, 'Démarrage…');
         progress.innerHTML = ''; progress.append(h('b', {}, '⬇ ' + name), bar, label);
-        try { const r0 = await (await fetch('/api/ai/ollama/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: name, endpoint: d.endpoint || '' }) })).json(); if (r0.error) throw new Error(r0.error); } catch (e) { label.textContent = '⚠️ ' + e.message; return; }
+        try { const r0 = await (await apiFetch('/api/ai/ollama/pull', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: name, endpoint: d.endpoint || '' }) })).json(); if (r0.error) throw new Error(r0.error); } catch (e) { label.textContent = '⚠️ ' + e.message; return; }
         for (;;) {
           await new Promise(r => setTimeout(r, 1000)); if (S.page !== 'ai') return;
-          const st = await (await fetch('/api/ai/ollama/pull?model=' + encodeURIComponent(name))).json();
+          const st = await (await apiFetch('/api/ai/ollama/pull?model=' + encodeURIComponent(name))).json();
           const pct = st.total ? Math.round(st.completed / st.total * 100) : 0;
           bar.firstChild.style.width = Math.max(3, pct) + '%'; label.textContent = st.error ? '⚠️ ' + st.error : st.done ? '✅ Modèle téléchargé' : `${st.status}${st.total ? ' — ' + pct + ' % (' + fmtSize(st.completed) + ' / ' + fmtSize(st.total) + ')' : ''}`;
           if (st.error) return;
@@ -291,7 +291,7 @@ async function pageAISettings(v) {
     }
   };
   const keyRow = h('div', { class: 'field' }, h('label', {}, 'Clé API'), keyIn,
-    dis.hasKey ? h('button', { class: 'btn sm sec', style: { marginTop: '8px' }, onclick: async () => { await fetch('/api/ai/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: '__clear__' }) }); toast('Clé supprimée'); render(); } }, 'Supprimer la clé enregistrée') : null);
+    dis.hasKey ? h('button', { class: 'btn sm sec', style: { marginTop: '8px' }, onclick: async () => { await apiFetch('/api/ai/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: '__clear__' }) }); toast('Clé supprimée'); render(); } }, 'Supprimer la clé enregistrée') : null);
   const advRow = h('div', { class: 'grid g3', style: { gap: '14px' } }, h('div', { class: 'field' }, h('label', {}, 'Modèle'), modelIn), h('div', { class: 'field' }, h('label', {}, 'Adresse du service (facultatif)'), endIn),
     h('div', { class: 'field' }, h('label', {}, 'Longueur max. de réponse (tokens)'), h('input', { type: 'number', min: 300, max: 8000, value: d.maxTokens, oninput: e => { d.maxTokens = +e.target.value; } })));
   const refresh = () => {
@@ -317,12 +317,12 @@ async function pageAISettings(v) {
   };
   modelIn.placeholder = dis.providers[d.provider]?.model || ''; endIn.placeholder = dis.providers[d.provider]?.endpoint || '';
   refresh();
-  const save = async () => { const body = { ...d }; if (keyIn.value.trim()) body.apiKey = keyIn.value.trim(); const r = await fetch('/api/ai/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!r.ok) throw new Error('échec'); keyIn.value = ''; };
+  const save = async () => { const body = { ...d }; if (keyIn.value.trim()) body.apiKey = keyIn.value.trim(); const r = await apiFetch('/api/ai/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!r.ok) throw new Error('échec'); keyIn.value = ''; };
   v.append(h('div', { class: 'card' }, h('h2', {}, '🧠 Fournisseur d’intelligence artificielle', h('small', {}, Object.keys(dis.providers).length - 1 + ' fournisseurs')), cards, info, statusBox,
     h('div', { style: { display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' } }, keyRow, advRow),
     h('div', { class: 'toolbar', style: { margin: '16px 0 0' } },
       h('button', { class: 'btn', onclick: async () => { try { await save(); toast('✅ Paramètres enregistrés'); render(); } catch { toast('⚠️ Enregistrement impossible'); } } }, 'Enregistrer'),
-      h('button', { class: 'btn sec', onclick: async () => { try { await save(); const r = await fetch('/api/ai/test', { method: 'POST' }); const j = await r.json(); toast(r.ok ? `✅ Connexion OK (${j.model})` : '⚠️ ' + j.error); } catch (e) { toast('⚠️ ' + e.message); } } }, '🔌 Tester la connexion'))));
+      h('button', { class: 'btn sec', onclick: async () => { try { await save(); const r = await apiFetch('/api/ai/test', { method: 'POST' }); const j = await r.json(); toast(r.ok ? `✅ Connexion OK (${j.model})` : '⚠️ ' + j.error); } catch (e) { toast('⚠️ ' + e.message); } } }, '🔌 Tester la connexion'))));
   v.append(h('div', { class: 'card', style: { marginTop: '18px' } }, h('h2', {}, '🔒 Confidentialité'),
     h('ul', { style: { margin: 0, paddingLeft: '20px', lineHeight: 1.7 } },
       h('li', {}, 'Seules des ', h('b', {}, 'données agrégées'), ' sont transmises (totaux par catégorie et par mois, principaux postes de dépense, anomalies). Les virements vers des particuliers sont anonymisés ; aucun IBAN ni libellé bancaire détaillé n’est envoyé.'),

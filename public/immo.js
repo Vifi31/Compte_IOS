@@ -11,12 +11,12 @@ const pc1 = x => (Math.round(x * 10) / 10).toString().replace('.', ',') + ' %';
 let IM = null; // projet courant (chargé du serveur)
 async function immoLoad() {
   if (IM) return IM;
-  const j = await (await fetch('/api/immo')).json();
+  const j = await (await apiFetch('/api/immo')).json();
   IM = j.project ?? immoDefault(); return IM;
 }
 async function immoSave() {
   IM.exemple = false;
-  const r = await fetch('/api/immo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project: IM }) });
+  const r = await apiFetch('/api/immo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project: IM }) });
   if (!r.ok) toast('⚠️ Enregistrement impossible');
 }
 const commit = () => { immoSave(); setTimeout(render, 0); };
@@ -145,7 +145,7 @@ async function pageImmoParams(v) {
   v.append(ccard('#8b5cf6', '➕ Opérations apportant des fonds supplémentaires', h('div', { class: 'tablewrap' }, h('table', {}, th('Opération', 'Type', ['Montant (€)', 'r'], 'Date ▼', '', 'Statut', ''), h('tbody', {}, fsRows))),
     h('div', { class: 'toolbar', style: { margin: '12px 0 0' } }, h('button', { class: 'btn sm sec', onclick: () => { P.fondsSupp.push({ id: uid(), label: 'Nouvelle opération', type: 'don', montant: 0, date: P.dateSignature, rembourseRelais: false, statut: 'prevu' }); commit(); } }, '＋ Ajouter une opération'),
       h('span', { class: 'muted' }, 'Vente, don, prime, héritage… Une opération cochée « rembourse le relais » solde automatiquement le prêt relais à sa date.'))));
-  v.append(h('div', { class: 'toolbar', style: { marginTop: '14px' } }, h('button', { class: 'btn sec', onclick: () => modal('Réinitialiser le projet ?', [h('p', {}, 'Toutes les données du projet immobilier seront remplacées par un projet d’exemple.')], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn danger', onclick: async () => { await fetch('/api/immo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project: null }) }); IM = null; close(); toast('Projet réinitialisé'); render(); } }, 'Réinitialiser')]) }, '↺ Réinitialiser le projet'), h('a', { class: 'btn', href: '#/immo-planning', style: { textDecoration: 'none' } }, 'Voir le planning et la simulation →')));
+  v.append(h('div', { class: 'toolbar', style: { marginTop: '14px' } }, h('button', { class: 'btn sec', onclick: () => modal('Réinitialiser le projet ?', [h('p', {}, 'Toutes les données du projet immobilier seront remplacées par un projet d’exemple.')], close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn danger', onclick: async () => { await apiFetch('/api/immo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project: null }) }); IM = null; close(); toast('Projet réinitialisé'); render(); } }, 'Réinitialiser')]) }, '↺ Réinitialiser le projet'), h('a', { class: 'btn', href: '#/immo-planning', style: { textDecoration: 'none' } }, 'Voir le planning et la simulation →')));
 }
 const ccard = (color, title, ...kids) => h('div', { class: 'card ccard', style: { '--ac': color } }, h('h2', {}, title), ...kids);
 const pair = (...c) => h('div', { class: 'pair' }, ...c);

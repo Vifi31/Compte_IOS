@@ -19,7 +19,7 @@ async function exportPromptsPdf(list) {
 }
 
 async function exportVersionsPdf() {
-  const D = await (await fetch('/api/versions')).json(), list = D.list;
+  const D = await (await apiFetch('/api/versions')).json(), list = D.list;
   const blocks = [{ t: 'kpis', items: [
     { label: 'Version installée', value: 'v' + D.current, sub: `Node ${D.about.node}`, color: '#6366f1' },
     { label: 'Versions publiées', value: String(list.length), sub: list.length ? `de v${list[list.length - 1].version} à v${list[0].version}` : '–', color: '#10b981' },
@@ -59,7 +59,7 @@ async function exportDocsPdf() {
 }
 
 async function exportLicensePdf() {
-  const D = await (await fetch('/api/license')).json(), L = D.license, acc = L.acceptance, ok = acc && acc.eulaVersion === L.eulaVersion;
+  const D = await (await apiFetch('/api/license')).json(), L = D.license, acc = L.acceptance, ok = acc && acc.eulaVersion === L.eulaVersion;
   const blocks = [{ t: 'kpis', items: [
     { label: 'Copyright', value: D.brief.copyright, sub: D.brief.product, color: '#6366f1' },
     { label: 'Licence de diffusion', value: D.types[L.licenseType].label.split(' — ')[0], sub: D.types[L.licenseType].spdx, color: '#8b5cf6' },

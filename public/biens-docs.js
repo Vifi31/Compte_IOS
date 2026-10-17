@@ -6,7 +6,7 @@ const gdKey = d => d.bien + '|' + d.name;
 const gdUrl = (d, dl) => '/api/biens/' + encodeURIComponent(d.bien) + '/documents?name=' + encodeURIComponent(d.name) + (dl ? '&download=1' : '');
 
 async function gdAction(items, body) {
-  const r = await fetch('/api/biens/library/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: items.map(d => ({ bien: d.bien, name: d.name })), ...body }) });
+  const r = await apiFetch('/api/biens/library/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: items.map(d => ({ bien: d.bien, name: d.name })), ...body }) });
   const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Action impossible')); return false; }
   BS = null; await biensLoad(); return j;
 }
@@ -14,7 +14,7 @@ async function gdAction(items, body) {
 async function pageBiensDocs(v) {
   v.append(h('div', { class: 'loading' }, 'Chargement…'));
   await biensLoad(); if (S.page !== 'biens-docs') return;
-  const lib = await (await fetch('/api/biens/library')).json(); if (S.page !== 'biens-docs') return; v.innerHTML = '';
+  const lib = await (await apiFetch('/api/biens/library')).json(); if (S.page !== 'biens-docs') return; v.innerHTML = '';
   const kinds = lib.kinds, kLabel = id => kinds.find(k => k.id === id)?.label ?? 'Autre', kIcon = id => kinds.find(k => k.id === id)?.icon ?? '📎';
   const biens = lib.biens, all = lib.docs;
   if (gd.bien !== 'all' && gd.bien !== '_inbox' && !biens.some(b => b.id === gd.bien)) gd.bien = 'all';
@@ -22,7 +22,7 @@ async function pageBiensDocs(v) {
 
   // recherche plein texte (corpus du périmètre choisi) : restreint la liste et fournit les extraits
   let hits = null;
-  if (gd.q.trim()) { try { const j = await (await fetch('/api/biens/corpus?bien=' + encodeURIComponent(gd.bien) + '&q=' + encodeURIComponent(gd.q.trim()))).json(); hits = new Map((j.docs ?? []).map(d => [gdKey(d), d])); } catch { hits = new Map(); } }
+  if (gd.q.trim()) { try { const j = await (await apiFetch('/api/biens/corpus?bien=' + encodeURIComponent(gd.bien) + '&q=' + encodeURIComponent(gd.q.trim()))).json(); hits = new Map((j.docs ?? []).map(d => [gdKey(d), d])); } catch { hits = new Map(); } }
   const rows = all.filter(d => (gd.bien === 'all' || d.bien === gd.bien) && (!gd.kind || d.kind === gd.kind) && (!gd.tag || d.tags.includes(gd.tag)) && (!hits || hits.has(gdKey(d))));
   gd.sel = new Set([...gd.sel].filter(k => all.some(d => gdKey(d) === k)));
   const selDocs = () => all.filter(d => gd.sel.has(gdKey(d)));
@@ -45,7 +45,7 @@ async function pageBiensDocs(v) {
 
   // -- catégories de documents : libellés modifiables, ajout, suppression (enregistrement immédiat)
   const saveKinds = async list => {
-    const r = await fetch('/api/biens/kinds', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kinds: list }) });
+    const r = await apiFetch('/api/biens/kinds', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kinds: list }) });
     const j = await r.json(); if (!r.ok) { toast('⚠️ ' + (j.error || 'Enregistrement impossible')); return false; }
     BS = j; toast('🏷️ Catégories enregistrées'); render(); return true;
   };
@@ -67,7 +67,7 @@ async function pageBiensDocs(v) {
   const up = async files => {
     let n = 0;
     for (const f of files.filter(f => /\.pdf$/i.test(f.name))) {
-      const r = await fetch('/api/biens/' + encodeURIComponent(gd.upBien) + '/documents?kind=' + encodeURIComponent(gd.upKind) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: await f.arrayBuffer() });
+      const r = await apiFetch('/api/biens/' + encodeURIComponent(gd.upBien) + '/documents?kind=' + encodeURIComponent(gd.upKind) + '&name=' + encodeURIComponent(f.name), { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: await f.arrayBuffer() });
       const j = await r.json(); if (r.ok) n++; else toast('⚠️ ' + f.name + ' : ' + (j.error || 'dépôt impossible'));
     }
     if (n) toast('📥 ' + n + ' document(s) déposé(s)'); BS = null; render();
@@ -106,13 +106,13 @@ async function pageBiensDocs(v) {
         return h('tr', { class: gd.sel.has(k) ? 'rowcalled' : '', 'data-k': k },
           h('td', {}, h('input', { type: 'checkbox', checked: gd.sel.has(k) })),
           h('td', {}, sel([h('option', { value: '_inbox', selected: d.bien === '_inbox' }, '📥 Non affecté'), ...biens.map(b => h('option', { value: b.id, selected: d.bien === b.id }, (b.icone || '🏠') + ' ' + b.nom))], d.bien, async x => { if (await gdAction(one(), { action: 'move', to: x })) { toast('Document affecté'); render(); } })),
-          h('td', {}, h('a', { class: 'doclink', href: gdUrl(d), target: '_blank' }, d.name)),
+          h('td', {}, h('a', { class: 'doclink', href: apiUrl(gdUrl(d)), target: '_blank' }, d.name)),
           h('td', {}, sel(kinds.map(x => h('option', { value: x.id, selected: d.kind === x.id }, x.icon + ' ' + x.label)), d.kind, async x => { if (await gdAction(one(), { action: 'meta', kind: x })) render(); })),
           h('td', {}, h('input', { type: 'date', value: d.date || '', onchange: async e => { if (await gdAction(one(), { action: 'meta', date: e.target.value })) render(); } })),
           tags,
           h('td', {}, h('input', { type: 'text', value: d.note || '', maxlength: 300, placeholder: 'Note…', style: { minWidth: '140px', width: '100%' }, onchange: async e => { await gdAction(one(), { action: 'meta', note: e.target.value }); } })),
           ex, h('td', { class: 'r muted nw' }, fmtBytes(d.size)), h('td', { class: 'muted num nw' }, fdate(d.at.slice(0, 10))),
-          h('td', { class: 'r nw' }, h('a', { class: 'icon-btn', title: 'Ouvrir', href: gdUrl(d), target: '_blank', style: { textDecoration: 'none' } }, '👁️'), h('a', { class: 'icon-btn', title: 'Télécharger', href: gdUrl(d, true), style: { textDecoration: 'none' } }, '⬇️')));
+          h('td', { class: 'r nw' }, h('a', { class: 'icon-btn', title: 'Ouvrir', href: apiUrl(gdUrl(d)), target: '_blank', style: { textDecoration: 'none' } }, '👁️'), h('a', { class: 'icon-btn', title: 'Télécharger', href: apiUrl(gdUrl(d, true)), style: { textDecoration: 'none' } }, '⬇️')));
       })))) : h('div', { class: 'empty', style: { padding: '18px' } }, hits ? 'Aucun document ne contient ce texte.' : 'Aucun document dans ce périmètre : déposez des PDF ci-dessus.')));
   gdSelUi(v);
   gdFold(v);

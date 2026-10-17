@@ -176,7 +176,7 @@ const R_ok = g => g.rows.some(x => !x.res.error);
 
 async function pageBiensEstimation(v) {
   v.append(h('div', { class: 'loading' }, 'Chargement…'));
-  const [,, dis, hist] = await Promise.all([biensLoad(), Promise.resolve(), fetch('/api/ai/settings').then(r => r.json()).catch(() => null), fetch('/api/ai/history').then(r => r.json()).catch(() => ({ list: [] }))]);
+  const [,, dis, hist] = await Promise.all([biensLoad(), Promise.resolve(), apiFetch('/api/ai/settings').then(r => r.json()).catch(() => null), apiFetch('/api/ai/history').then(r => r.json()).catch(() => ({ list: [] }))]);
   if (S.page !== 'biens-estimation') return; v.innerHTML = '';
   if (!biensAll().length) { v.append(biensEmpty('L’estimation a besoin d’un bien : créez-en un premier.', 'biens')); return; }
   const b = bienOf(S.bi) ?? biensAll()[0]; S.bi = b.id;
@@ -220,7 +220,7 @@ async function pageBiensEstimation(v) {
   const searchBtn = h('button', { class: 'btn', disabled: !b.commune || bes.loading, onclick: async () => {
     bes.loading = true; bes.err = null; render();
     try {
-      const r = await fetch(`/api/biens/dvf?commune=${encodeURIComponent(b.commune)}&years=${Math.max(1, Math.ceil(bes.mois / 12))}`);
+      const r = await apiFetch(`/api/biens/dvf?commune=${encodeURIComponent(b.commune)}&years=${Math.max(1, Math.ceil(bes.mois / 12))}`);
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || 'Service des ventes injoignable');
       bes.muts = j; bes.useManual = false; bes.saved = false; bes.err = null;
@@ -255,7 +255,7 @@ async function pageBiensEstimation(v) {
     const locate = async () => {
       if (!b.adresse && !b.ville) { toast('⚠️ Renseignez l’adresse dans la fiche du bien'); return; }
       try {
-        const j = await (await fetch('/api/biens/geocode?q=' + encodeURIComponent([b.adresse, b.ville].filter(Boolean).join(' ')) + '&cp=' + encodeURIComponent(b.codePostal || '') + '&citycode=' + encodeURIComponent(b.commune || ''))).json();
+        const j = await (await apiFetch('/api/biens/geocode?q=' + encodeURIComponent([b.adresse, b.ville].filter(Boolean).join(' ')) + '&cp=' + encodeURIComponent(b.codePostal || '') + '&citycode=' + encodeURIComponent(b.commune || ''))).json();
         if (j.error) throw new Error(j.error);
         b.lat = j.lat; b.lon = j.lon; await bienPut(b); toast('📍 Adresse localisée : ' + j.label + (j.score < .6 ? ' (précision faible)' : '')); bes.saved = false; render();
       } catch (er) { toast('⚠️ ' + er.message); }
@@ -417,7 +417,7 @@ function besAiCard(b, res, dis, hist) {
     if (!res || res.error) { toast('⚠️ Lancez d’abord une estimation'); return; }
     runBtn.disabled = true; runBtn.textContent = '⏳ Analyse en cours… (peut durer plusieurs minutes avec un modèle local)';
     try {
-      const j = await (await fetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: BES_SYSTEM, user: BES_USER.replaceAll('{{bien}}', JSON.stringify(D().bien)).replaceAll('{{estimation}}', JSON.stringify({ estimation: D().estimation, comparables: D().echantillon })), title: 'Estimation IA · ' + b.nom, meta: meta() }) })).json();
+      const j = await (await apiFetch('/api/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ system: BES_SYSTEM, user: BES_USER.replaceAll('{{bien}}', JSON.stringify(D().bien)).replaceAll('{{estimation}}', JSON.stringify({ estimation: D().estimation, comparables: D().echantillon })), title: 'Estimation IA · ' + b.nom, meta: meta() }) })).json();
       if (j.error) throw new Error(j.error); besAI = j.analysis; toast('✅ Analyse terminée'); render();
     } catch (e) { toast('⚠️ ' + e.message); runBtn.disabled = false; runBtn.textContent = '🧠 Lancer l’analyse IA'; }
   };
@@ -432,7 +432,7 @@ function besAiCard(b, res, dis, hist) {
   };
   const saveLocal = async () => {
     if (!res || res.error) { toast('⚠️ Lancez d’abord une estimation'); return; }
-    const j = await (await fetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Analyse locale · estimation ' + b.nom, text: localText(), meta: meta() }) })).json();
+    const j = await (await apiFetch('/api/ai/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Analyse locale · estimation ' + b.nom, text: localText(), meta: meta() }) })).json();
     besAI = j.analysis; toast('Analyse locale terminée'); render();
   };
   const mine = (hist?.list ?? []).filter(e => e.meta?.bien === b.id);

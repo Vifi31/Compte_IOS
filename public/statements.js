@@ -52,8 +52,8 @@ function stmtRow(s) {
     h('td', {}, s.error ? h('span', { class: 'badge', title: s.error }, '❌ illisible') : s.ok ? h('span', { class: 'badge', style: { color: 'var(--good)' } }, '✅ OK') : h('span', { class: 'badge', style: { color: 'var(--warn)' } }, '⚠️ écart')),
     h('td', { class: 'r muted num' }, s.size ? fmtBytes(s.size) : ''),
     h('td', { class: 'r', style: { whiteSpace: 'nowrap' } },
-      h('a', { class: 'icon-btn', title: 'Ouvrir le PDF', target: '_blank', href: url, style: { textDecoration: 'none' } }, '👁️'),
-      h('a', { class: 'icon-btn', title: 'Télécharger', href: url + '&download=1', style: { textDecoration: 'none' } }, '⬇️'),
+      h('a', { class: 'icon-btn', title: 'Ouvrir le PDF', target: '_blank', href: apiUrl(url), style: { textDecoration: 'none' } }, '👁️'),
+      h('a', { class: 'icon-btn', title: 'Télécharger', href: apiUrl(url + '&download=1'), style: { textDecoration: 'none' } }, '⬇️'),
       h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => modal('Supprimer ce relevé ?', [
         h('p', {}, h('b', {}, s.file), ' sera supprimé du dossier Documents/Releves et ses ' + s.ops + ' opérations disparaîtront de l’application.'),
         h('div', { class: 'tip warn' }, 'Pensez à faire une sauvegarde « Données » avant : la suppression est définitive.'),
