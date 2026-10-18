@@ -24,7 +24,7 @@ Apple n'autorise pas l'installation d'un fichier téléchargé comme sur Android
 par un identifiant Apple au moment de l'installation. On le fait depuis le PC avec **Sideloadly** (gratuit) :
 
 1. Sur le PC, installer [Sideloadly](https://sideloadly.io), ainsi qu'iTunes et iCloud dans leur version téléchargée sur le site d'Apple (pas celle du Microsoft Store).
-2. Télécharger `Comptes-x.y.z.ipa` depuis **github.com/Vifi31/Comptes/releases** (version « Comptes x.y.z (iPhone) »).
+2. Télécharger `Comptes-x.y.z.ipa` depuis **github.com/Vifi31/compte_IOS/releases** (ou Vifi31/Comptes/releases) (version « Comptes x.y.z (iPhone) »).
 3. Brancher l'iPhone en USB et accepter « Faire confiance à cet ordinateur ».
 4. Dans Sideloadly, glisser le fichier `.ipa`, saisir votre identifiant Apple, puis cliquer sur **Start**.
 5. Sur l'iPhone :
@@ -49,7 +49,7 @@ Pour une mise à jour, installer le nouvel IPA de la même façon : il remplace 
 ## Fabrication sur GitHub (GitHub Actions)
 
 - `.github/workflows/android.yml` construit l'APK à chaque envoi sur la branche `android` et le publie dans les Releases (`android-vx.y.z`).
-- `.github/workflows/ios.yml` construit l'IPA (non signé) sur un Mac de GitHub quand la version change dans `package.json`, ou à la demande (*Actions › Appli iPhone › Run workflow*) ; publication `ios-vx.y.z`.
+- `.github/workflows/ios.yml` construit l'IPA (non signé) sur un Mac de GitHub quand la version change dans `package.json` (branche `android` du dépôt Comptes, branche `main` du dépôt **compte_IOS**), ou à la demande (*Actions › Appli iPhone › Run workflow*) ; publication `ios-vx.y.z`.
   Pour un dépôt privé, une minute de Mac compte pour 10 minutes du quota gratuit de GitHub Actions.
 
 La fabrication Android a besoin de deux secrets (*Settings › Secrets and variables › Actions › New repository secret*) :
