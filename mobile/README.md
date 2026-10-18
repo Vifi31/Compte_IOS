@@ -49,8 +49,9 @@ Pour une mise à jour, installer le nouvel IPA de la même façon : il remplace 
 ## Fabrication sur GitHub (GitHub Actions)
 
 - `.github/workflows/android.yml` construit l'APK à chaque envoi sur la branche `android` et le publie dans les Releases (`android-vx.y.z`).
-- `.github/workflows/ios.yml` construit l'IPA (non signé) sur un Mac de GitHub quand la version change dans `package.json` (branche `android` du dépôt Comptes, branche `main` du dépôt **compte_IOS**), ou à la demande (*Actions › Appli iPhone › Run workflow*) ; publication `ios-vx.y.z`.
-  Pour un dépôt privé, une minute de Mac compte pour 10 minutes du quota gratuit de GitHub Actions.
+- `.github/workflows/ios.yml` construit l'IPA (non signé) sur un Mac de GitHub et le publie dans les Releases (`ios-vx.y.z`) :
+  à chaque envoi sur `main` du dépôt public **compte_IOS** (Mac gratuits) ; dans le dépôt privé Comptes, seulement à la demande
+  (*Actions › Appli iPhone › Run workflow*), car une minute de Mac y compte pour 10 minutes du quota gratuit.
 
 La fabrication Android a besoin de deux secrets (*Settings › Secrets and variables › Actions › New repository secret*) :
 

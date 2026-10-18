@@ -1,15 +1,13 @@
-# Fabrication de l'appli iPhone (IPA non signé) sur un Mac de GitHub, à chaque nouvelle version sur la branche android
-# (dépôt Comptes) ou main (dépôt compte_IOS).
+# Fabrication de l'appli iPhone (IPA non signé) sur un Mac de GitHub.
 # L'IPA est publié dans les Releases du dépôt ; il s'installe sur l'iPhone depuis le PC avec Sideloadly
 # (signature par votre identifiant Apple au moment de l'installation) : voir mobile/README.md.
-# Les Mac de GitHub décomptent 10 minutes de quota par minute pour un dépôt privé : la fabrication
-# ne part donc que lorsque la version change (package.json) ou à la demande (Actions › Run workflow).
+# Dépôt public (compte_IOS, Mac gratuits) : à chaque envoi sur main.
+# Dépôt privé (Comptes, une minute de Mac = 10 minutes de quota) : seulement à la demande (Actions › Appli iPhone › Run workflow).
 name: Appli iPhone
 
 on:
   push:
     branches: [android, main]
-    paths: [package.json]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +19,7 @@ concurrency:
 
 jobs:
   ipa:
+    if: github.event_name == 'workflow_dispatch' || !github.event.repository.private
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
