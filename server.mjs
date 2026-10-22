@@ -2,7 +2,7 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
-import { api, json, importStatements, operationsCount } from './lib/app.mjs';
+import { api, json, importStatements, operationsCount, authorize, networkEnabled, setListening } from './lib/app.mjs';
 import { ROOT, PORT } from './lib/paths.mjs';
 const PUBLIC = path.join(ROOT, 'public');
 
@@ -10,6 +10,8 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
+    const deny = authorize(req, url); // appels venant d'un autre appareil : jeton exigé (Administration › API)
+    if (deny) return json(res, deny.code, { error: deny.error });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     let file = url.pathname === '/vendor/chart.js'
       ? path.join(ROOT, 'node_modules/chart.js/dist/chart.umd.js')
@@ -23,4 +25,7 @@ const server = http.createServer(async (req, res) => {
 
 console.log('Import des relevés…');
 await importStatements();
-server.listen(PORT, '127.0.0.1', () => console.log(`Comptes → http://localhost:${PORT}  (${operationsCount()} opérations)`));
+// Accès réseau (Administration › API) : écoute de toutes les interfaces, sinon de l'ordinateur seul
+const HOST = networkEnabled() ? '0.0.0.0' : '127.0.0.1';
+setListening({ host: HOST, port: PORT });
+server.listen(PORT, HOST, () => console.log(`Comptes → http://localhost:${PORT}  (${operationsCount()} opérations)${HOST === '0.0.0.0' ? ' · accès réseau activé' : ''}`));

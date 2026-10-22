@@ -508,7 +508,7 @@ function renameAccount(a) {
 }
 
 // ============ Routage ============
-const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, immo: pageImmo, 'immo-params': pageImmoParams, 'immo-planning': pagePlanning, 'immo-suivi': pageSuivi, 'immo-actions': pageActions, 'immo-ai': pageImmoAI, techdocs: pageTechDocs, db: pageDb, biens: pageBiens, bien: pageBien, 'biens-stats': pageBiensStats, 'biens-docs': pageBiensDocs, 'biens-estimation': pageBiensEstimation, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
+const PAGES = { dashboard: pageDashboard, operations: pageOperations, stats: pageStats, forecast: pageForecast, compare: pageCompare, docs: pageDocs, reports: pageReports, backups: pageBackups, menus: pageMenus, immo: pageImmo, 'immo-params': pageImmoParams, 'immo-planning': pagePlanning, 'immo-suivi': pageSuivi, 'immo-actions': pageActions, 'immo-ai': pageImmoAI, techdocs: pageTechDocs, db: pageDb, apis: pageApis, biens: pageBiens, bien: pageBien, 'biens-stats': pageBiensStats, 'biens-docs': pageBiensDocs, 'biens-estimation': pageBiensEstimation, manifest: pageManifest, model: pageModel, analyse: pageAnalyse, ai: pageAISettings, prompts: pagePrompts, license: pageLicense, versions: pageVersions, statements: pageStatements, categories: pageCategories, accounts: pageAccounts };
 function render() {
   const fk = document.activeElement?.dataset?.fk;
   charts.splice(0).forEach(c => c.destroy());

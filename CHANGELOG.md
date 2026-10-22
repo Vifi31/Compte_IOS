@@ -1,5 +1,9 @@
 # Journal des modifications
 
+## 2.9.0 — 2026-10-22
+- Administration › API, services externes : IA, géographie et DVF activables, adresse et délai modifiables, une clé par fournisseur IA, test de connexion, journal des appels et statistiques
+- Administration › API, API interne : catalogue des routes, testeur intégré, jetons d’accès (lecture seule ou complet, enregistrés sous forme d’empreinte), ouverture au réseau local avec jeton obligatoire
+
 ## 2.8.0 — 2026-10-17
 - Appli iPhone : projet iOS Capacitor (même moteur local et même interface que la version Android), icônes et écran de démarrage, IPA fabriqué sur un Mac de GitHub et publié dans les Releases, installation par Sideloadly
 
