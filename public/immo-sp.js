@@ -51,6 +51,11 @@ function spModal(P) {
       h('span', { class: 'muted nw', style: { width: '64px', textAlign: 'right' } }, nOf(s.id) + ' tâche(s)'),
       h('button', { class: 'icon-btn', type: 'button', title: 'Monter', disabled: i === 0, onclick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; draw(); } }, '▲'),
       h('button', { class: 'icon-btn', type: 'button', title: 'Descendre', disabled: i === list.length - 1, onclick: () => { [list[i + 1], list[i]] = [list[i], list[i + 1]]; draw(); } }, '▼'),
+      h('button', { class: 'icon-btn', type: 'button', title: 'Dupliquer ce sous-projet (avec ses tâches si vous le souhaitez)', onclick: () => {
+        const n = nOf(s.id), withTasks = n > 0 && confirm(`Dupliquer aussi les ${n} tâche(s) de « ${s.nom} » ?\n\nOK = avec les tâches (statut « à faire », enchaînements recréés)\nAnnuler = sous-projet vide`);
+        const root = s.nom.replace(/ \(copie( \d+)?\)$/, ''); let nom = root + ' (copie)', k = 1; while (list.some(x => x.nom === nom)) nom = root + ` (copie ${++k})`;
+        list.splice(i + 1, 0, { id: uid(), nom, couleur: SP_PAL.find(c => !list.some(x => x.couleur === c)) ?? SP_PAL[list.length % SP_PAL.length], from: withTasks ? s.id : null }); draw();
+      } }, '⧉'),
       h('button', { class: 'icon-btn', type: 'button', title: 'Supprimer (les tâches restent, sans sous-projet)', onclick: () => { if (nOf(s.id) && !confirm(`Supprimer « ${s.nom} » ? Ses ${nOf(s.id)} tâche(s) resteront, sans sous-projet.`)) return; list.splice(i, 1); draw(); } }, '🗑️'))));
     if (!list.length) box.append(h('div', { class: 'muted', style: { fontSize: '12.5px', margin: '0 0 8px' } }, 'Aucun sous-projet. Exemples : Financement, Terrain, Construction, Déménagement, Vente du bien actuel.'));
     box.append(h('button', { class: 'btn sm sec', type: 'button', onclick: () => { list.push({ id: uid(), nom: 'Nouveau sous-projet', couleur: SP_PAL.find(c => !list.some(s => s.couleur === c)) ?? SP_PAL[list.length % SP_PAL.length] }); draw(); } }, '＋ Ajouter un sous-projet'));
@@ -60,6 +65,7 @@ function spModal(P) {
     close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
       const names = list.map(s => s.nom.trim().toLowerCase()); if (new Set(names).size !== names.length) return toast('⚠️ Deux sous-projets portent le même nom');
       const ids = new Set(list.map(s => s.id)); for (const a of P.actions) if (a.sp && !ids.has(a.sp)) delete a.sp;
-      P.sousProjets = list; close(); toast('🎨 Sous-projets enregistrés'); commit();
+      let copied = 0; for (const s of list) if (s.from) { copied += duplicateSpTasks(P, s.from, s.id); delete s.from; }
+      P.sousProjets = list; close(); toast('🎨 Sous-projets enregistrés' + (copied ? ` · ${copied} tâche(s) dupliquée(s)` : '')); commit();
     } }, 'Enregistrer')]);
 }
