@@ -30,6 +30,46 @@ function hasCycle(list) {
   return seen < list.length;
 }
 
+/**
+ * Calcule l'échéance (fin) d'une tâche d'après ses contraintes et les durées, sans rien modifier. Renvoie { date, why[] }.
+ *  - « après X » : fin ≥ fin(X) + délai + durée ; « avant X » : fin ≤ début(X) − délai ; la date retenue est la plus tardive des « après », bornée par la plus proche des « avant ».
+ *  - une tâche liée sans date (échéance vide) est elle-même calculée d'abord ; sans contrainte exploitable : date du jour + durée.
+ * `list` peut contenir des tâches en cours de saisie (a absente de P.actions) ; la date de `a` n'est jamais utilisée pour son propre calcul.
+ */
+function computeDueDate(P, a, list = P.actions) {
+  const all = list.includes(a) ? list : [...list, a], by = new Map(all.map(x => [x.id, x])), memo = new Map(), busy = new Set(), dur = x => +x.duree || 0;
+  const endOf = x => {
+    if (x !== a && x.date) return x.date;
+    if (memo.has(x.id)) return memo.get(x.id);
+    if (busy.has(x.id)) return null; busy.add(x.id);
+    const r = calc(x); busy.delete(x.id); memo.set(x.id, r.date); return r.date;
+  };
+  const calc = x => {
+    let min = null, max = null; const why = [];
+    for (const dep of x.deps ?? []) {
+      const o = by.get(dep.id); if (!o || o === x) continue; const od = endOf(o); if (!od) continue; const delay = Math.max(0, +dep.delay || 0);
+      if (dep.type === 'avant') { const m = addDays(od, -dur(o) - delay); if (!max || m < max) { max = m; } why.push(`doit finir ${delay ? delay + ' j ' : ''}avant le début de « ${shortLabel(o.label, 30)} » (${fdate(addDays(od, -dur(o)))}) → au plus tard le ${fdate(m)}`); }
+      else { const m = addDays(od, delay + dur(x)); if (!min || m > min) min = m; why.push(`commence ${delay ? delay + ' j ' : ''}après la fin de « ${shortLabel(o.label, 30)} » (${fdate(od)}) + ${dur(x)} j de durée → au plus tôt le ${fdate(m)}`); }
+    }
+    let date = min ?? max;
+    if (min && max && max < min) { date = min; why.push(`⚠ contraintes incompatibles : « avant » demande le ${fdate(max)}, « après » le ${fdate(min)} (la plus tardive est retenue)`); }
+    else if (min && max) date = min;
+    if (!date) { date = addDays(todayIso(), dur(x)); why.push(`aucune contrainte exploitable : aujourd’hui + durée (${dur(x)} j)`); }
+    return { date, why };
+  };
+  return calc(a);
+}
+
+/** Détail du calcul d'échéance (fenêtre) avec « Appliquer » pour enregistrer la date calculée dans la tâche. */
+function dueDateModal(P, a, onApply) {
+  const r = computeDueDate(P, a), same = r.date === a.date;
+  modal('Calcul de l’échéance : ' + shortLabel(a.label, 50), [
+    h('p', { style: { marginTop: 0 } }, 'Échéance calculée : ', h('b', {}, fdate(r.date)), a.date ? [' (actuelle : ', fdate(a.date), same ? ' — identique' : '', ')'] : null),
+    h('ul', { class: 'muted', style: { fontSize: '13px', paddingLeft: '18px' } }, r.why.map(w => h('li', {}, w))),
+    h('div', { class: 'muted', style: { fontSize: '12px' } }, 'Une tâche déjà faite n’est jamais recalculée automatiquement.')],
+    close => [h('button', { class: 'btn sec', onclick: close }, 'Fermer'), same && a.dateAuto ? null : h('button', { class: 'btn', onclick: () => { onApply(r.date); close(); } }, 'Appliquer cette date')]);
+}
+
 /** Calcule (sans rien modifier) les nouvelles dates qui respectent les contraintes : seule la tâche qui subit la dépendance est déplacée. */
 function planReschedule(P) {
   const by = new Map(P.actions.map(a => [a.id, a])), dates = new Map(P.actions.map(a => [a.id, a.date])), dur = a => +a.duree || 0;

@@ -94,11 +94,14 @@ function phasesModal(P) {
 // ---- fenêtre d'ajout / modification d'une action : phase et tâche type en listes, dépendances, conditions
 function editAction(P, a, preset = {}) {
   const sim = sim0(P);
-  const d = a ? { prio: 'normale', duree: 0, ...a, deps: (a.deps ?? []).map(x => ({ ...x })), conds: (a.conds ?? []).map(x => ({ ...x })) } : { id: uid(), label: preset.label ?? '', phase: preset.phase ?? TASK_PHASE, date: preset.date ?? todayIso(), statut: 'afaire', notes: '', auto: false, tache: true, prio: preset.prio ?? 'normale', duree: 0, deps: [], conds: [] };
+  const d = a ? { prio: 'normale', duree: 0, ...a, deps: (a.deps ?? []).map(x => ({ ...x })), conds: (a.conds ?? []).map(x => ({ ...x })) } : { id: uid(), label: preset.label ?? '', phase: preset.phase ?? TASK_PHASE, date: preset.date ?? '', statut: 'afaire', notes: '', auto: false, tache: true, prio: preset.prio ?? 'normale', duree: 0, deps: [], conds: [] };
   const others = () => P.actions.filter(x => x !== a).sort((p, q) => p.date.localeCompare(q.date));
   let asModel = false; const uploaded = [];
   const inLabel = h('input', { type: 'text', value: d.label, oninput: e => { d.label = e.target.value; } });
-  const inDate = h('input', { type: 'date', value: d.date, onchange: e => { d.date = e.target.value; } });
+  const inDate = h('input', { type: 'date', value: d.date, title: 'Laissez vide pour que l’échéance soit calculée d’après les enchaînements et la durée', onchange: e => { d.date = e.target.value; d.dateAuto = false; } });
+  const btnCalc = h('button', { class: 'btn sm sec', type: 'button', title: 'Calcule l’échéance d’après les enchaînements et la durée saisis ci-dessous', onclick: () => {
+    const r = computeDueDate(P, d, P.actions.filter(x => x !== a)); d.date = r.date; d.dateAuto = true; inDate.value = r.date; toast('🧮 Échéance calculée : ' + fdate(r.date));
+  } }, '🧮 Calculer');
   const inDuree = h('input', { type: 'number', min: 0, step: 1, value: d.duree, onchange: e => { d.duree = Math.max(0, +e.target.value || 0); } });
   const inNotes = h('input', { type: 'text', value: d.notes, oninput: e => { d.notes = e.target.value; } });
   const selPrio = h('select', { onchange: e => { d.prio = e.target.value; } }, [['normale', 'Normale'], ['haute', '❗ Prioritaire']].map(([k, l]) => h('option', { value: k, selected: d.prio === k }, l)));
@@ -158,7 +161,7 @@ function editAction(P, a, preset = {}) {
   modal(a ? 'Modifier l’action' : 'Nouvelle action', [
     fld('Tâche type (facultatif)', tplSel, 'Catalogue de tâches courantes de l’achat, plus vos modèles ⭐ : le libellé, la durée, la priorité et la date sont proposés.'),
     fld('Action', inLabel),
-    h('div', { class: 'grid g2', style: { gap: '12px' } }, fld('Phase', phaseSel), fld('Échéance (fin)', inDate)),
+    h('div', { class: 'grid g2', style: { gap: '12px' } }, fld('Phase', phaseSel), fld('Échéance (fin)', h('div', { style: { display: 'flex', gap: '6px' } }, inDate, btnCalc), 'Vide = calculée à l’enregistrement d’après les enchaînements (avant / après) et la durée.')),
     h('div', { class: 'grid g3', style: { gap: '12px' } },
       fld('Durée (jours)', inDuree, '0 = jalon ; la tâche occupe [échéance − durée ; échéance]'),
       fld('Statut', h('select', { onchange: e => { d.statut = e.target.value; } }, Object.entries(ST_ACTION).map(([k, l]) => h('option', { value: k, selected: d.statut === k }, l)))),
@@ -179,6 +182,7 @@ function editAction(P, a, preset = {}) {
       d.conds = d.conds.filter(c => c.type !== 'tache' || (c.id && c.id !== d.id)).filter(c => c.type !== 'date' || c.date);
       const list = a ? P.actions.map(x => x === a ? { ...x, ...d } : x) : [...P.actions, d];
       if (hasCycle(list)) return toast('⚠️ Ces dépendances forment une boucle (A attend B qui attend A) : modifiez-les');
+      if (!d.date) { d.date = computeDueDate(P, d, P.actions.filter(x => x !== a)).date; d.dateAuto = true; toast('🧮 Échéance calculée : ' + fdate(d.date)); }
       if (asModel) (P.modeles ??= []).push({ p: d.phase, l: d.label.trim(), d: +d.duree || 0, prio: d.prio, notes: d.notes || '' });
       if (a) Object.assign(a, d); else P.actions.push(d);
       S.immoFocus = d.phase; close(); commit();
@@ -197,7 +201,7 @@ function taskQuickAdd(P) {
     const t = all[+e.target.value]; if (!t) return; d.label = t.l; inp.value = t.l; d.prio = t.prio || 'normale'; prioSel.value = d.prio;
     if (t.p && immoPhases(P).includes(t.p)) { d.phase = t.p; phaseSel.value = t.p; } if (t.ref) { d.date = tplRefDate(P, t); inDate.value = d.date; }
   } }, h('option', { value: '' }, '📋 Tâche type…'), all.map((t, i) => h('option', { value: i }, (t.perso ? '⭐ ' : '') + t.l)));
-  const add = () => { const l = d.label.trim(); if (!l) { inp.focus(); return; } const tp = all.find(x => x.l === l); P.actions.push({ id: uid(), tache: true, statut: 'afaire', label: l, phase: d.phase, date: d.date, prio: d.prio, duree: tp?.d ?? 0, notes: '' }); toast('✅ Tâche ajoutée au plan d’actions et au suivi'); S.immoFocus = d.phase; commit(); };
+  const add = () => { const l = d.label.trim(); if (!l) { inp.focus(); return; } const tp = all.find(x => x.l === l); const t = { id: uid(), tache: true, statut: 'afaire', label: l, phase: d.phase, date: d.date, prio: d.prio, duree: tp?.d ?? 0, notes: '' }; if (!t.date) { t.date = computeDueDate(P, t).date; t.dateAuto = true; } P.actions.push(t); toast('✅ Tâche ajoutée au plan d’actions et au suivi'); S.immoFocus = d.phase; commit(); };
   return h('div', { class: 'taskadd' }, h('span', { class: 'tag' }, '＋ Tâche'), tpl, inp, phaseSel, inDate, prioSel, h('button', { class: 'btn sm', onclick: add }, 'Ajouter'),
     h('button', { class: 'btn sm sec', title: 'Gérer les phases et les modèles de tâches', onclick: () => phasesModal(P) }, '🗂️'));
 }
@@ -212,7 +216,7 @@ function phaseQuickAdd(P, phase) {
   } }, h('option', { value: '' }, '📋 Tâche type…'), mine.map(([t, i]) => h('option', { value: i }, (t.perso ? '⭐ ' : '') + t.l))) : null;
   const add = () => {
     const l = d.label.trim(); if (!l) { inp.focus(); return; } const tp = all.find(x => x.l === l && x.p === phase);
-    P.actions.push({ id: uid(), tache: true, statut: 'afaire', label: l, phase, date: d.date, prio: d.prio, duree: tp?.d ?? 0, notes: '' }); toast('✅ Tâche ajoutée à « ' + phase.replace(/^\d+\.\s*/, '') + ' »'); S.immoFocus = phase; commit();
+    const t = { id: uid(), tache: true, statut: 'afaire', label: l, phase, date: d.date, prio: d.prio, duree: tp?.d ?? 0, notes: '' }; if (!t.date) { t.date = computeDueDate(P, t).date; t.dateAuto = true; } P.actions.push(t); toast('✅ Tâche ajoutée à « ' + phase.replace(/^\d+\.\s*/, '') + ' »'); S.immoFocus = phase; commit();
   };
   return h('div', { class: 'taskadd phaseadd' }, h('span', { class: 'tag' }, '＋'), tpl, inp, inDate,
     h('button', { class: 'btn sm', onclick: add }, 'Ajouter'), h('button', { class: 'btn sm sec', title: 'Édition complète : durée, enchaînement, conditions', onclick: () => editAction(P, null, { phase, label: d.label.trim(), date: d.date, prio: d.prio }) }, 'Détails…'));

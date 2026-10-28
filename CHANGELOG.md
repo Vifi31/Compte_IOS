@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.9.1 — 2026-10-28
+- Plan d’ctions : échéance facultative, calculée d’après les enchaînements (avant / après, délais) et la durée ; bouton 🧮 sur chaque tâche pour recalculer la date (détail du calcul, puis « Appliquer »), bouton « Calculer » dans l’édition, pastille 🧮 sur les dates calculées
+
 ## 2.9.0 — 2026-10-22
 - Administration › API, services externes : IA, géographie et DVF activables, adresse et délai modifiables, une clé par fournisseur IA, test de connexion, journal des appels et statistiques
 - Administration › API, API interne : catalogue des routes, testeur intégré, jetons d’accès (lecture seule ou complet, enregistrés sous forme d’empreinte), ouverture au réseau local avec jeton obligatoire
