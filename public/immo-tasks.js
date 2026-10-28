@@ -136,9 +136,12 @@ function taskGanttCard(P, today) {
     const cv = $('#imGt'); if (!cv) return;
     const lab = a => shortLabel(a.label, 38);
     chart(cv, { type: 'bar', data: { labels: items.map(lab), datasets: [{ data: items.map(a => { const s = off(taskStart(a)), e = off(a.date); return (+a.duree || 0) ? [s, e] : [e - 0.5, e + 0.5]; }), backgroundColor: items.map(colorOf), borderRadius: 4, borderSkipped: false, barPercentage: .62, categoryPercentage: 1, minBarLength: 8 }] },
-      options: { indexAxis: 'y', layout: { padding: { right: 14 } }, scales: { x: { min: 0, max: off(tEnd), ticks: { maxTicksLimit: 10, callback: v => { const d = addDays(t0, Math.round(v)); return fdate(d).slice(0, 5) + '/' + d.slice(2, 4); } }, grid: { color: css('--line') } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } },
+      options: { indexAxis: 'y', layout: { padding: { right: 14 } }, scales: { x: { min: 0, max: off(tEnd), ticks: { maxTicksLimit: 10, callback: v => { const d = addDays(t0, Math.round(v)); return fdate(d).slice(0, 5) + '/' + d.slice(2, 4); } }, grid: { color: css('--line') } }, y: { grid: { display: false }, ticks: { font: { size: 11 }, color: ctx => spColor(P, items[ctx.index] ?? {}) ?? css('--muted') } } },
         plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => items[i[0].dataIndex].label, label: c => { const a = items[c.dataIndex]; return [` ${fdate(taskStart(a))} → ${fdate(a.date)}${+a.duree ? ` (${a.duree} j)` : ' (jalon)'}`, ` ${ACT_ST[actStatus(a, today)][0]} · ${clean0(a.phase)}${spOf(P, a) ? ' · 🎨 ' + spOf(P, a).nom : ''}`, ...edges.filter(e => e.holder === a).map(e => ` ${e.type === 'avant' ? 'avant' : 'après'} « ${shortLabel(e.other.label, 30)} » (${e.delay} j)${e.bad ? ' ⚠' : ''}`)]; } } } } },
-      plugins: [{ id: 'gantt-links', afterDatasetsDraw(ch) {
+      plugins: [{ id: 'sp-bands', beforeDatasetsDraw(ch) { // lignes teintées selon le sous-projet de la tâche
+        const a = ch.chartArea, c = ch.ctx, rh = (a.bottom - a.top) / items.length; c.save();
+        items.forEach((it, i) => { const col = spColor(P, it); if (!col) return; c.globalAlpha = .13; c.fillStyle = col; c.fillRect(0, a.top + i * rh, a.right, rh); c.globalAlpha = 1; c.fillRect(0, a.top + i * rh, 4, rh); });
+        c.restore(); } }, { id: 'gantt-links', afterDatasetsDraw(ch) {
         const meta = ch.getDatasetMeta(0), c = ch.ctx, a = ch.chartArea; c.save();
         const tx = ch.scales.x.getPixelForValue(off(today)); if (tx >= a.left && tx <= a.right) { c.strokeStyle = '#0ea5e9'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.moveTo(tx, a.top); c.lineTo(tx, a.bottom); c.stroke(); c.setLineDash([]); }
         for (const e of edges) {

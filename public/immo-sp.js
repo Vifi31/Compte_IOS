@@ -27,6 +27,7 @@ function spFilterBar(P, A, st) {
   };
   return h('div', { class: 'spbar' },
     ...spGroups(P).filter(g => g.id || A.some(a => !spOf(P, a))).map(g => chip(g.id || '__none', g.nom, g.couleur, A.filter(a => spKey(P, a) === g.id))),
+    h('button', { class: 'btn sm sec', title: 'Cocher plusieurs tâches et les affecter à un sous-projet', onclick: () => spAssignModal(P, st.sp && st.sp !== '__none' ? st.sp : '') }, '☑ Affecter des tâches'),
     h('button', { class: 'btn sm sec', title: 'Créer, renommer, colorer les sous-projets', onclick: () => spModal(P) }, '🎨 Gérer'));
 }
 const spPass = (P, a, st) => !st.sp || (st.sp === '__none' ? !spOf(P, a) : a.sp === st.sp);
@@ -46,7 +47,7 @@ function spModal(P) {
     box.innerHTML = '';
     list.forEach((s, i) => box.append(h('div', { class: 'sprow' },
       h('input', { type: 'color', value: s.couleur, title: 'Couleur', onchange: e => { s.couleur = e.target.value; draw(); } }),
-      h('input', { type: 'text', value: s.nom, maxlength: 40, style: { flex: 1 }, onchange: e => { s.nom = e.target.value.trim() || s.nom; } }),
+      h('input', { type: 'text', value: s.nom, maxlength: 60, style: { flex: '1 1 340px', minWidth: '240px' }, onchange: e => { s.nom = e.target.value.trim() || s.nom; } }),
       h('span', { class: 'swatches' }, SP_PAL.map(c => h('button', { type: 'button', class: 'sw' + (c === s.couleur ? ' on' : ''), style: { background: c }, title: c, onclick: () => { s.couleur = c; draw(); } }))),
       h('span', { class: 'muted nw', style: { width: '64px', textAlign: 'right' } }, nOf(s.id) + ' tâche(s)'),
       h('button', { class: 'icon-btn', type: 'button', title: 'Monter', disabled: i === 0, onclick: () => { [list[i - 1], list[i]] = [list[i], list[i - 1]]; draw(); } }, '▲'),
@@ -62,10 +63,44 @@ function spModal(P) {
   };
   draw();
   modal('🎨 Sous-projets', [h('p', { class: 'muted', style: { margin: '0 0 10px' } }, 'Un sous-projet regroupe des tâches sous un thème et une couleur. Cette couleur se retrouve dans le suivi, le plan d’actions, le diagramme de Gantt et le rapport PDF. Affectez une tâche avec ✏️ ou le sélecteur de sa ligne.'), box],
-    close => [h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
-      const names = list.map(s => s.nom.trim().toLowerCase()); if (new Set(names).size !== names.length) return toast('⚠️ Deux sous-projets portent le même nom');
-      const ids = new Set(list.map(s => s.id)); for (const a of P.actions) if (a.sp && !ids.has(a.sp)) delete a.sp;
-      let copied = 0; for (const s of list) if (s.from) { copied += duplicateSpTasks(P, s.from, s.id); delete s.from; }
-      P.sousProjets = list; close(); toast('🎨 Sous-projets enregistrés' + (copied ? ` · ${copied} tâche(s) dupliquée(s)` : '')); commit();
-    } }, 'Enregistrer')]);
+    close => {
+      const save = next => {
+        const names = list.map(s => s.nom.trim().toLowerCase()); if (new Set(names).size !== names.length) return toast('⚠️ Deux sous-projets portent le même nom');
+        const ids = new Set(list.map(s => s.id)); for (const a of P.actions) if (a.sp && !ids.has(a.sp)) delete a.sp;
+        let copied = 0; for (const s of list) if (s.from) { copied += duplicateSpTasks(P, s.from, s.id); delete s.from; }
+        P.sousProjets = list; close(); toast('🎨 Sous-projets enregistrés' + (copied ? ` · ${copied} tâche(s) dupliquée(s)` : '')); if (next) { immoSave(); next(); } else commit();
+      };
+      return [h('button', { class: 'btn sec', style: { marginRight: 'auto' }, title: 'Enregistre les sous-projets puis ouvre le choix des tâches à affecter', onclick: () => save(() => spAssignModal(P)) }, '☑ Affecter des tâches…'),
+        h('button', { class: 'btn sec', onclick: close }, 'Annuler'), h('button', { class: 'btn', onclick: () => save() }, 'Enregistrer')];
+    }, true);
+}
+
+/** Affectation de plusieurs tâches à la fois : recherche, filtre par phase, cases à cocher, puis choix du sous-projet cible. */
+function spAssignModal(P, target0 = '') {
+  const st = { target: target0 || spList(P)[0]?.id || '', q: '', phase: '', only: false }, checked = new Set(), box = h('div', { class: 'spassign' }), cnt = h('span', { class: 'muted' });
+  if (!spList(P).length) return toast('Créez d’abord un sous-projet avec 🎨');
+  const shown = () => P.actions.filter(a => (!st.phase || a.phase === st.phase) && (!st.only || !spOf(P, a)) && (!st.q || a.label.toLowerCase().includes(st.q))).sort((a, b) => immoPhases(P).indexOf(a.phase) - immoPhases(P).indexOf(b.phase) || a.date.localeCompare(b.date));
+  const draw = () => {
+    box.innerHTML = ''; let last = null; const list = shown();
+    for (const a of list) {
+      if (a.phase !== last) { last = a.phase; box.append(h('div', { class: 'sphead' }, last.replace(/^d+.s*/, ''))); }
+      box.append(h('label', { class: 'spitem', ...spRowAttrs(P, a) }, h('input', { type: 'checkbox', checked: checked.has(a.id), onchange: e => { e.target.checked ? checked.add(a.id) : checked.delete(a.id); cnt.textContent = checked.size + ' sélectionnée(s)'; } }),
+        h('span', { style: { flex: 1 } }, a.label), spTag(P, a, true), h('span', { class: 'muted nw', style: { fontSize: '12px' } }, fdate(a.date))));
+    }
+    if (!list.length) box.append(h('div', { class: 'muted', style: { padding: '12px' } }, 'Aucune tâche ne correspond.'));
+    cnt.textContent = checked.size + ' sélectionnée(s)';
+  };
+  draw();
+  const tgt = h('select', { onchange: e => { st.target = e.target.value; } }, spList(P).map(s => h('option', { value: s.id, selected: st.target === s.id }, '🎨 ' + s.nom)), h('option', { value: '__off' }, '✖ Retirer du sous-projet'));
+  const tools = h('div', { class: 'toolbar', style: { margin: '0 0 8px' } },
+    h('input', { type: 'search', placeholder: 'Rechercher une tâche…', style: { flex: '1 1 200px' }, oninput: e => { st.q = e.target.value.toLowerCase(); draw(); } }),
+    h('select', { onchange: e => { st.phase = e.target.value; draw(); } }, h('option', { value: '' }, 'Toutes les phases'), immoPhasesUsed(P).map(p => h('option', { value: p }, p))),
+    h('label', { style: { display: 'inline-flex', gap: '5px', alignItems: 'center', cursor: 'pointer' } }, h('input', { type: 'checkbox', onchange: e => { st.only = e.target.checked; draw(); } }), 'Sans sous-projet seulement'),
+    h('button', { class: 'btn sm sec', onclick: () => { shown().forEach(a => checked.add(a.id)); draw(); } }, 'Tout cocher'), h('button', { class: 'btn sm sec', onclick: () => { checked.clear(); draw(); } }, 'Tout décocher'), cnt);
+  modal('☑ Affecter des tâches à un sous-projet', [tools, box], close => [h('span', { class: 'muted' }, 'Affecter la sélection à :'), tgt, h('button', { class: 'btn sec', onclick: close }, 'Annuler'),
+    h('button', { class: 'btn', onclick: () => {
+      if (!checked.size) return toast('⚠️ Cochez au moins une tâche');
+      const off = st.target === '__off'; for (const a of P.actions) if (checked.has(a.id)) { if (off) delete a.sp; else a.sp = st.target; }
+      const n = checked.size; close(); toast(`🎨 ${n} tâche(s) ${off ? 'retirée(s) de leur sous-projet' : 'affectée(s)'}`); commit();
+    } }, 'Affecter')], true);
 }

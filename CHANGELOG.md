@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.12.0 — 2026-10-28
+- Sous-projets : champ du nom élargi ; affectation de plusieurs tâches à la fois (☑ Affecter des tâches : recherche, filtre par phase, cases à cocher) ; diagramme de Gantt (écran et PDF) avec lignes teintées et libellés colorés selon le sous-projet
+
 ## 2.11.0 — 2026-10-28
 - Plan d’actions : duplication d’une tâche (📄), duplication d’un sous-projet (⧉) avec ou sans ses tâches (enchaînements recréés), export du projet ou d’un sous-projet en CSV (tableur) ou JSON (⬇ Exporter)
 

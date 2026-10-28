@@ -540,3 +540,7 @@ svg.rails{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
 .sprow { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; flex-wrap: wrap; } .sprow input[type=color] { width: 36px; height: 32px; padding: 0; border: 0; background: none; cursor: pointer; }
 .swatches { display: inline-flex; gap: 3px; } .swatches .sw { width: 16px; height: 16px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; } .swatches .sw.on { border-color: var(--text, #000); }
 .spdot { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+
+.spassign { max-height: 52vh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; } .sphead { position: sticky; top: 0; z-index: 1; padding: 5px 10px; font-weight: 700; font-size: 12px; background: var(--card); border-bottom: 1px solid var(--line); color: var(--muted); }
+.spitem { display: flex; gap: 10px; align-items: center; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid var(--line); } .spitem[data-sp] { background: color-mix(in srgb, var(--sp) 9%, var(--card)); box-shadow: inset 5px 0 0 var(--sp); } .spitem input { width: 17px; height: 17px; }
+.modal footer { flex-wrap: wrap; align-items: center; }
