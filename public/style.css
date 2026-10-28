@@ -529,3 +529,14 @@ svg.rails{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
   #toasts { left: 12px; right: 12px; bottom: calc(16px + env(safe-area-inset-bottom)); }
   .loading { height: 40vh; }
 }
+
+/* sous-projets : pastille, liseré et fond teinté des lignes, barre de filtre, fenêtre de gestion */
+.sptag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 9px; border-radius: 999px; margin-left: 8px; color: #fff; background: var(--sp); white-space: nowrap; vertical-align: 1px; } .sptag.sm { font-size: 10.5px; padding: 0 7px; margin-left: 0; }
+.actrow[data-sp], tr[data-sp] { box-shadow: inset -6px 0 0 var(--sp); } .actrow[data-sp] { background: color-mix(in srgb, var(--sp) 9%, var(--card)); }
+.spbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 4px; }
+.spchip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 10px; cursor: pointer; font: inherit; font-size: 12.5px; color: var(--text, inherit); background: color-mix(in srgb, var(--sp) 10%, var(--card)); border: 2px solid color-mix(in srgb, var(--sp) 35%, transparent); }
+.spchip i { width: 12px; height: 12px; border-radius: 4px; background: var(--sp); } .spchip .n { color: var(--muted); font-size: 11.5px; } .spchip.on { border-color: var(--sp); background: color-mix(in srgb, var(--sp) 22%, var(--card)); }
+.spchip .bar { width: 46px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--sp) 20%, transparent); overflow: hidden; } .spchip .bar u { display: block; height: 100%; background: var(--sp); }
+.sprow { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; flex-wrap: wrap; } .sprow input[type=color] { width: 36px; height: 32px; padding: 0; border: 0; background: none; cursor: pointer; }
+.swatches { display: inline-flex; gap: 3px; } .swatches .sw { width: 16px; height: 16px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; } .swatches .sw.on { border-color: var(--text, #000); }
+.spdot { width: 14px; height: 14px; border-radius: 4px; flex: none; }

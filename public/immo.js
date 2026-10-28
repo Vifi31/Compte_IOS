@@ -299,10 +299,14 @@ function immoActionsPdf(P, sim) {
   blocks.push({ t: 'vbars', height: 165, stacked: true, int: true, labels: months.map((m, i) => months.length > 12 && i % 2 ? '' : m.slice(5, 7) + '/' + m.slice(2, 4)), series: KEYS.map(k => ({ name: ACT_ST[k][0], color: ACT_ST[k][1], data: months.map(m => A.filter(a => a.date.slice(0, 7) === m.slice(0, 7) && stOf(a) === k).length) })) });
   // -- dépendances entre tâches : diagramme de Gantt + tableau des contraintes
   const edges = taskEdges(P), badEdges = edges.filter(e => e.bad), order = [...A].sort((a, b) => taskStart(a).localeCompare(taskStart(b)) || a.date.localeCompare(b.date)), gi = new Map(order.map((a, i) => [a.id, i]));
+  const hasSp = spList(P).length > 0;
+  if (hasSp) blocks.push({ t: 'h2', text: 'Sous-projets' },
+    { t: 'table', keep: true, fontSize: 9, columns: [{ title: 'Sous-projet', w: 4 }, { title: 'Tâches', w: 1, align: 'right' }, { title: 'Faites', w: 1, align: 'right' }, { title: 'En retard', w: 1.2, align: 'right' }, { title: 'Prochaine échéance', w: 2 }],
+      rows: spGroups(P).map(g => ({ g, l: A.filter(a => spKey(P, a) === g.id) })).filter(x => x.l.length).map(({ g, l }) => { const open = l.filter(a => a.statut !== 'fait').sort((a, b) => a.date.localeCompare(b.date)), late = open.filter(a => a.date < today).length; return { cells: [{ text: g.nom, dot: g.couleur, bold: true }, String(l.length), String(l.length - open.length), { text: String(late), color: late ? '#dc2626' : undefined, bold: !!late }, open[0] ? fdate(open[0].date) : '–'] }; }) });
   blocks.push({ t: 'h2', text: 'Diagramme de Gantt et contraintes entre tâches' },
     { t: 'text', text: edges.length ? `${edges.length} contrainte(s) entre tâches, dont ${badEdges.length} non respectée(s). Les flèches relient la fin d’une tâche au début de celle qui en dépend (délai minimal en jours indiqué).` : 'Aucune dépendance n’est définie entre les tâches : elles sont indépendantes. (Ajoutez-en avec ✏️ dans le plan d’actions.)' },
-    { t: 'gantt', today, rowH: 14.5, items: order.map(a => ({ label: a.label, start: taskStart(a), end: a.date, color: ACT_ST[stOf(a)][1], done: a.statut === 'fait', milestone: !(+a.duree), bold: a.prio === 'haute' })),
-      links: edges.map(e => ({ from: gi.get(e.from.id), to: gi.get(e.to.id), bad: e.bad, dashed: e.type === 'avant', label: e.delay ? (e.type === 'avant' ? '−' : '+') + e.delay + ' j' : '' })), legend: KEYS.map(k => ({ label: ACT_ST[k][0], color: ACT_ST[k][1] })) });
+    { t: 'gantt', today, rowH: 14.5, items: order.map(a => ({ label: a.label, start: taskStart(a), end: a.date, color: hasSp ? (spColor(P, a) ?? SP_NONE) : ACT_ST[stOf(a)][1], done: a.statut === 'fait', milestone: !(+a.duree), bold: a.prio === 'haute' })),
+      links: edges.map(e => ({ from: gi.get(e.from.id), to: gi.get(e.to.id), bad: e.bad, dashed: e.type === 'avant', label: e.delay ? (e.type === 'avant' ? '−' : '+') + e.delay + ' j' : '' })), legend: hasSp ? spGroups(P).filter(g => g.id || A.some(a => !spOf(P, a))).map(g => ({ label: g.nom, color: g.couleur })) : KEYS.map(k => ({ label: ACT_ST[k][0], color: ACT_ST[k][1] })) });
   if (edges.length) blocks.push({ t: 'h3', text: 'Tableau des contraintes' },
     { t: 'table', keep: true, fontSize: 8.5, columns: [{ title: 'Tâche', w: 4 }, { title: 'Contrainte', w: 3.4 }, { title: 'Délai min.', w: 1, align: 'right' }, { title: 'Marge', w: 1, align: 'right' }, { title: 'État', w: 1.6 }],
       rows: edges.sort((a, b) => a.slack - b.slack).map(e => ({ flag: e.bad ? 'bad' : e.slack <= 3 ? 'warn' : undefined,
@@ -311,9 +315,9 @@ function immoActionsPdf(P, sim) {
   phases.forEach((p, i) => {
     const all = A.filter(a => a.phase === p).sort((a, b) => a.date.localeCompare(b.date)), d = all.filter(a => a.statut === 'fait').length;
     blocks.push({ t: 'h3', text: p + '  —  ' + d + '/' + all.length + ' faites' },
-      { t: 'table', keep: true, fontSize: 8.5, columns: [{ title: 'Statut', w: 1.3 }, { title: 'Action', w: 5 }, { title: 'Échéance', w: 1.3 }, { title: 'Délai', w: 1.4 }, { title: 'Notes', w: 3.2 }],
+      { t: 'table', keep: true, fontSize: 8.5, columns: [{ title: 'Statut', w: 1.3 }, { title: 'Action', w: 5 }, ...(hasSp ? [{ title: 'Sous-projet', w: 2 }] : []), { title: 'Échéance', w: 1.3 }, { title: 'Délai', w: 1.4 }, { title: 'Notes', w: 3.2 }],
         rows: all.map(a => { const s = stOf(a), over = s === 'retard'; return { flag: over ? 'bad' : s === 'fait' ? 'good' : a.prio === 'haute' ? 'warn' : undefined,
-          cells: [{ text: ACT_ST[s][0], dot: ACT_ST[s][1], bold: true, color: s === 'afaire' ? '#64748b' : ACT_ST[s][1] }, { text: a.label + (a.tache ? '  [tâche]' : '') + (a.prio === 'haute' ? '  (prioritaire)' : ''), bold: over || a.prio === 'haute' }, fdate(a.date),
+          cells: [{ text: ACT_ST[s][0], dot: ACT_ST[s][1], bold: true, color: s === 'afaire' ? '#64748b' : ACT_ST[s][1] }, { text: a.label + (a.tache ? '  [tâche]' : '') + (a.prio === 'haute' ? '  (prioritaire)' : ''), bold: over || a.prio === 'haute' }, ...(hasSp ? [spOf(P, a) ? { text: spOf(P, a).nom, dot: spOf(P, a).couleur } : '–'] : []), fdate(a.date),
             { text: s === 'fait' ? '–' : relDays(a.date, today), color: over ? '#dc2626' : undefined, bold: over }, a.notes || ''] }; }) });
     void i;
   });

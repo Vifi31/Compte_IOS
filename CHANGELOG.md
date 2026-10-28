@@ -1,5 +1,8 @@
 # Journal des modifications
 
+## 2.10.0 — 2026-10-28
+- Immobilier : sous-projets de tâches (nom + couleur), gérés par 🎨 ; choix dans l’édition d’une tâche ; pastille et liseré colorés dans le plan d’actions, le suivi et « À traiter en priorité » ; filtre et avancement par sous-projet ; cartes regroupées par phase ou par sous-projet ; Gantt coloré par statut ou par sous-projet ; rapport PDF avec tableau des sous-projets, colonne et couleurs du Gantt
+
 ## 2.9.1 — 2026-10-28
 - Plan d’actions : échéance facultative, calculée d’après les enchaînements (avant / après, délais) et la durée ; bouton 🧮 sur chaque tâche pour recalculer la date (détail du calcul, puis « Appliquer »), bouton « Calculer » dans l’édition, pastille 🧮 sur les dates calculées
 

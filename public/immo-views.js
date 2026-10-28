@@ -54,14 +54,14 @@ async function pageSuivi(v) {
 
   // -- tâches et plan d'actions
   { const acts = P.actions, nDone = acts.filter(a => a.statut === 'fait').length, nLate = acts.filter(a => a.statut !== 'fait' && a.date < today).length, nTask = acts.filter(a => a.tache).length;
-    const todo = acts.filter(a => a.statut !== 'fait').sort((a, b) => ((a.date < today ? 0 : 1) - (b.date < today ? 0 : 1)) || (a.prio === 'haute' ? 0 : 1) - (b.prio === 'haute' ? 0 : 1) || a.date.localeCompare(b.date));
+    const spSt = S.immoSuiviSp ??= { sp: '' }, todo = acts.filter(a => a.statut !== 'fait' && spPass(P, a, spSt)).sort((a, b) => ((a.date < today ? 0 : 1) - (b.date < today ? 0 : 1)) || (a.prio === 'haute' ? 0 : 1) - (b.prio === 'haute' ? 0 : 1) || a.date.localeCompare(b.date));
     const shown = todo.slice(0, 12);
     v.append(vcard(IMC.green, '✅ Tâches et plan d’actions', `${nDone}/${acts.length} faites${nLate ? ' · ' + nLate + ' en retard' : ''}${nTask ? ' · ' + nTask + ' tâche(s) perso' : ''}`,
       h('div', { class: 'progress', style: { '--c': nLate ? IMC.amber : IMC.green, height: '12px', margin: '0 0 6px' } }, h('i', { style: { width: (acts.length ? nDone / acts.length * 100 : 0) + '%' } })),
-      taskQuickAdd(P),
+      taskQuickAdd(P), spFilterBar(P, acts, spSt),
       shown.length ? h('div', { class: 'tablewrap', style: { marginTop: '8px' } }, h('table', {}, th('', 'Action', 'Phase', 'Échéance', 'Statut'), h('tbody', {}, shown.map(a => { const over = a.date < today;
-        return h('tr', { class: over ? 'rowshort' : '' }, h('td', { style: { width: '30px' } }, h('input', { type: 'checkbox', title: 'Marquer comme fait', onchange: () => { a.statut = 'fait'; commit(); } })),
-          h('td', {}, h('b', {}, a.label), a.tache ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--primary)' } }, 'ma tâche') : null, a.prio === 'haute' ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--bad)' } }, '❗') : null, a.notes ? h('div', { class: 'sub', style: { maxWidth: 'none', whiteSpace: 'normal' } }, a.notes) : null),
+        return h('tr', { class: over ? 'rowshort' : '', ...spRowAttrs(P, a) }, h('td', { style: { width: '30px' } }, h('input', { type: 'checkbox', title: 'Marquer comme fait', onchange: () => { a.statut = 'fait'; commit(); } })),
+          h('td', {}, h('b', {}, a.label), spTag(P, a), a.tache ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--primary)' } }, 'ma tâche') : null, a.prio === 'haute' ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--bad)' } }, '❗') : null, a.notes ? h('div', { class: 'sub', style: { maxWidth: 'none', whiteSpace: 'normal' } }, a.notes) : null),
           h('td', { class: 'muted', style: { fontSize: '12px' } }, a.phase.replace(/^\d+\.\s*/, '')), h('td', { class: 'nw' }, fdate(a.date), ' ', pill(relDays(a.date, today), urgencyColor(a, today))), h('td', { style: { width: '120px' } }, sel(a, 'statut', ST_ACTION))); })))) : h('div', { class: 'muted', style: { marginTop: '8px' } }, acts.length ? '🎉 Toutes les actions sont faites.' : 'Aucune action : générez le plan dans « Plan d’actions » ou ajoutez vos tâches ci-dessus.'),
       h('div', { class: 'toolbar', style: { margin: '8px 0 0' } }, h('a', { class: 'btn sm sec', href: '#/immo-actions', style: { textDecoration: 'none' } }, todo.length > shown.length ? `Voir les ${todo.length - shown.length} autres actions →` : 'Ouvrir le plan d’actions →')))); }
 
@@ -96,9 +96,9 @@ async function pageActions(v) {
   v.append(immoHeader(P));
   v.append(h('div', { class: 'grid g4' }, kpi('k3', 'Actions', String(A.length), `${phases.length} phases`, '✅'), kpi('k2', 'Réalisées', String(done), A.length ? pc1(done / A.length * 100) + ' du plan' : '–', '🎯'), kpi(late ? 'k1' : 'k4', 'En retard', String(late), late ? 'à traiter en priorité' : 'aucune', '⏰'), kpi('k4', 'À 30 jours', String(soon.length), soon[0] ? `prochaine : ${fdate(soon[0].date)}` : 'rien d’imminent', '🗓️')));
   const urgent = A.filter(a => !naSet.has(a.id) && a.statut !== 'fait' && (a.date < today || a.date <= addDays(today, 45) || a.prio === 'haute')).sort((a, b) => ((a.date < today ? 0 : 1) - (b.date < today ? 0 : 1)) || a.date.localeCompare(b.date)).slice(0, 12);
-  const urgentCard = vcard(IMC.red, '🔥 À traiter en priorité', urgent.length ? `${urgent.length} action(s) · retards, échéances à 45 jours et priorités` : null, urgent.length ? h('div', { class: 'urgentgrid' }, urgent.map(a => h('div', { class: 'actrow st-' + stOf(a), style: { '--sc': urgencyColor(a, today) } },
+  const urgentCard = vcard(IMC.red, '🔥 À traiter en priorité', urgent.length ? `${urgent.length} action(s) · retards, échéances à 45 jours et priorités` : null, urgent.length ? h('div', { class: 'urgentgrid' }, urgent.map(a => h('div', { class: 'actrow st-' + stOf(a), ...spRowAttrs(P, a), style: { '--sc': urgencyColor(a, today), ...spRowAttrs(P, a).style } },
     h('input', { type: 'checkbox', title: 'Marquer comme fait', onchange: () => { a.statut = 'fait'; commit(); } }),
-    h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { class: 'actl' }, a.label, a.prio === 'haute' ? ' ❗' : ''), h('div', { class: 'sub', style: { maxWidth: 'none' } }, a.phase.replace(/^\d+\.\s*/, ''))),
+    h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { class: 'actl' }, a.label, a.prio === 'haute' ? ' ❗' : '', spTag(P, a)), h('div', { class: 'sub', style: { maxWidth: 'none' } }, a.phase.replace(/^\d+\.\s*/, ''))),
     pill(relDays(a.date, today), urgencyColor(a, today))))) : h('div', { class: 'empty', style: { padding: '20px' } }, '🎉 Rien d’urgent : toutes les actions des 45 prochains jours sont faites.'));
   urgentCard.style.marginTop = '14px';
   v.append(urgentCard);
@@ -107,11 +107,13 @@ async function pageActions(v) {
     h('button', { class: 'btn sec', onclick: () => editAction(P, null) }, '＋ Ajouter une action'),
     h('button', { class: 'btn sec', title: 'Liste des phases, ordre, renommage et modèles de tâches', onclick: () => phasesModal(P) }, '🗂️ Phases et modèles'),
     h('select', { onchange: e => { st.phase = e.target.value; render(); } }, h('option', { value: '' }, 'Toutes les phases'), phases.map(p => h('option', { value: p, selected: st.phase === p }, p))),
+    h('button', { class: 'btn sec', title: 'Créer et colorer les sous-projets', onclick: () => spModal(P) }, '🎨 Sous-projets'),
+    h('select', { title: 'Regrouper les cartes par phase ou par sous-projet', onchange: e => { st.group = e.target.value; render(); } }, [['', '🗂️ Groupées par phase'], ['sp', '🎨 Groupées par sous-projet']].map(([k, l]) => h('option', { value: k, selected: (st.group ?? '') === k }, l))),
     h('select', { title: 'Ordre des actions dans chaque phase', onchange: e => { st.order = e.target.value; render(); } }, [['dep', '🔗 Regroupées par dépendances'], ['date', '📅 Par date']].map(([k, l]) => h('option', { value: k, selected: (st.order ?? 'dep') === k }, l))),
     h('select', { onchange: e => { st.statut = e.target.value; render(); } }, h('option', { value: '' }, 'Tous les statuts'), Object.entries(ST_ACTION).map(([k, l]) => h('option', { value: k, selected: st.statut === k }, l))),
     h('span', { style: { marginLeft: 'auto' } }, pdfBtn('📄 Plan en PDF', () => immoActionsPdf(P, sim)))),
     h('p', { class: 'muted', style: { margin: '8px 0 0', fontSize: '12px' } }, 'Le plan est généré à partir des dates, des appels de fonds et de la simulation (déblocages du relais inclus). Vos actions, tâches et statuts sont conservés quand vous le mettez à jour.')));
-  v.append(taskQuickAdd(P));
+  v.append(taskQuickAdd(P), spFilterBar(P, A, st));
   if (!A.length) { v.append(h('div', { class: 'card empty', style: { marginTop: '14px' } }, 'Aucune action : cliquez sur « Générer le plan d’actions ».')); return; }
   const phaseNav = h('div', { class: 'chips phasenav' }), phaseBox = h('div', {}); // phases en haut de l'écran ; tableau de bord, Gantt et calendrier en dessous
   v.append(phaseNav, railLegend(), phaseBox);
@@ -138,18 +140,20 @@ async function pageActions(v) {
 
   // -- une carte colorée par phase
   const navItems = [], allPhases = immoPhases(P); // toutes les phases, même vides : on peut y ajouter une tâche directement
-  for (const p of allPhases) {
-    if (st.phase && p !== st.phase) continue;
-    const list = A.filter(a => a.phase === p && (!st.statut || a.statut === st.statut)).sort((a, b) => a.date.localeCompare(b.date)), seq = depSequence(P, list, st.order ?? 'dep'); if (!list.length && (st.statut || A.some(a => a.phase === p))) continue;
-    const all = A.filter(a => a.phase === p), dn = all.filter(a => a.statut === 'fait').length, col = PHASE_PAL[allPhases.indexOf(p) % 7];
+  const bySp = st.group === 'sp', groups = bySp ? spGroups(P).map(g => ({ p: g.nom, col: g.couleur, pick: a => spKey(P, a) === g.id })) : allPhases.map((p, i) => ({ p, col: PHASE_PAL[i % 7], pick: a => a.phase === p }));
+  for (const g of groups) {
+    const p = g.p;
+    if (st.phase && (bySp ? false : p !== st.phase)) continue;
+    const list = A.filter(a => g.pick(a) && (!bySp || !st.phase || a.phase === st.phase) && spPass(P, a, st) && (!st.statut || a.statut === st.statut)).sort((a, b) => a.date.localeCompare(b.date)), seq = depSequence(P, list, st.order ?? 'dep'); if (!list.length && (st.statut || st.sp || bySp || A.some(g.pick))) continue;
+    const all = A.filter(a => g.pick(a) && spPass(P, a, st)), dn = all.filter(a => a.statut === 'fait').length, col = g.col;
     navItems.push([p, col, dn, all.length]);
     phaseBox.append(vcard(col, p, `${dn}/${all.length} faites`, h('div', { class: 'progress', style: { '--c': col, marginBottom: '8px', height: '6px' } }, h('i', { style: { width: (all.length ? dn / all.length * 100 : 0) + '%' } })),
       seq.map(a => { if (a.__hdr) return chainHeader(P, a.__hdr, p); const s = stOf(a);
-        return h('div', { class: 'actrow st-' + s, 'data-aid': a.id, style: { '--sc': ACT_ST[s][1] } },
+        return h('div', { class: 'actrow st-' + s, 'data-aid': a.id, ...spRowAttrs(P, a), style: { '--sc': ACT_ST[s][1], ...spRowAttrs(P, a).style } },
           h('input', { type: 'checkbox', checked: a.statut === 'fait', title: 'Fait', onchange: e => { a.statut = e.target.checked ? 'fait' : 'afaire'; S.immoFocus = a.phase; commit(); } }),
-          h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { class: 'actl' }, a.label, a.tache ? h('span', { class: 'badge', style: { marginLeft: '8px', color: 'var(--primary)' } }, 'ma tâche') : null, a.prio === 'haute' ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--bad)' } }, '❗ prioritaire') : null), a.notes ? h('div', { class: 'sub', style: { maxWidth: 'none', whiteSpace: 'normal' } }, a.notes) : null, fileBadge(a), crossBadges(P, a), condChips(P, sim, a)),
+          h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { class: 'actl' }, a.label, spTag(P, a), a.tache ? h('span', { class: 'badge', style: { marginLeft: '8px', color: 'var(--primary)' } }, 'ma tâche') : null, a.prio === 'haute' ? h('span', { class: 'badge', style: { marginLeft: '6px', color: 'var(--bad)' } }, '❗ prioritaire') : null), a.notes ? h('div', { class: 'sub', style: { maxWidth: 'none', whiteSpace: 'normal' } }, a.notes) : null, fileBadge(a), crossBadges(P, a), condChips(P, sim, a)),
           h('span', { class: 'num muted nw', style: { fontSize: '12.5px' }, title: a.dateAuto ? 'Échéance calculée d’après les enchaînements et la durée' : '' }, a.dateAuto ? '🧮 ' : '', fdate(a.date), +a.duree ? ' · ' + a.duree + ' j' : ''), s === 'fait' ? pill('Fait', IMC.green) : s === 'na' ? pill('Non applicable', IMC.slate) : pill(relDays(a.date, today), urgencyColor(a, today)), h('div', { style: { width: '108px' } }, sel(a, 'statut', ST_ACTION)),
-          h('button', { class: 'icon-btn', title: 'Recalculer l’échéance (enchaînements et durée)', onclick: () => dueDateModal(P, a, date => { a.date = date; a.dateAuto = true; S.immoFocus = a.phase; toast('🧮 Échéance recalculée : ' + fdate(date)); commit(); }) }, '🧮'), h('button', { class: 'icon-btn', title: 'Modifier', onclick: () => editAction(P, a) }, '✏️'), h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => { S.immoFocus = a.phase; removeAction(P, a); commit(); } }, '🗑️')); }), phaseQuickAdd(P, p)));
+          h('button', { class: 'icon-btn', title: 'Recalculer l’échéance (enchaînements et durée)', onclick: () => dueDateModal(P, a, date => { a.date = date; a.dateAuto = true; S.immoFocus = a.phase; toast('🧮 Échéance recalculée : ' + fdate(date)); commit(); }) }, '🧮'), h('button', { class: 'icon-btn', title: 'Modifier', onclick: () => editAction(P, a) }, '✏️'), h('button', { class: 'icon-btn', title: 'Supprimer', onclick: () => { S.immoFocus = a.phase; removeAction(P, a); commit(); } }, '🗑️')); }), bySp ? null : phaseQuickAdd(P, p)));
   }
   // rails de dépendances : tracés après mise en page, retracés si la carte change de taille (ajout, modification, police, fenêtre)
   for (const c of phaseBox.children) { const p = c.querySelector(':scope > h2')?.textContent; const ph = allPhases.find(x => p?.startsWith(x)); if (!ph) continue; const redraw = () => drawRails(c, P, ph); requestAnimationFrame(redraw); setTimeout(redraw, 400); if (window.ResizeObserver) { let w = c.clientWidth; new ResizeObserver(() => { if (Math.abs(c.clientWidth - w) > 1) { w = c.clientWidth; redraw(); } }).observe(c); } }

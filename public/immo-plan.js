@@ -166,7 +166,7 @@ function editAction(P, a, preset = {}) {
       fld('Durée (jours)', inDuree, '0 = jalon ; la tâche occupe [échéance − durée ; échéance]'),
       fld('Statut', h('select', { onchange: e => { d.statut = e.target.value; } }, Object.entries(ST_ACTION).map(([k, l]) => h('option', { value: k, selected: d.statut === k }, l)))),
       fld('Priorité', selPrio)),
-    fld('Notes', inNotes),
+    h('div', { class: 'grid g2', style: { gap: '12px' } }, fld('Sous-projet', spSelect(P, d), 'Regroupe la tâche sous un thème coloré.'), fld('Notes', inNotes)),
     h('div', { class: 'field' }, h('label', {}, '⛓ Enchaînement avec d’autres tâches (avant / après, en jours)'), depBox,
       h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '6px' }, onclick: () => { const o = others().find(x => !d.deps.some(z => z.id === x.id)); if (!o) return toast('Aucune autre tâche disponible'); d.deps.push({ id: o.id, type: 'apres', delay: 0 }); drawDeps(); } }, '＋ Ajouter un enchaînement'),
       h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' } }, 'Le délai est un minimum en jours (0 = juste après / juste avant). Les contraintes non respectées sont signalées en rouge et peuvent être recalées automatiquement.')),
@@ -175,7 +175,8 @@ function editAction(P, a, preset = {}) {
       h('div', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' } }, 'Toutes les conditions doivent être vraies : sinon l’action est « non applicable » (grisée, sans retard ni alerte). Ex. : « Si prêt relais activé », « Si la tâche Compromis de vente est faite », « À partir du… ».')),
     h('div', { class: 'field' }, h('label', {}, '📎 Pièces jointes'), attachBox(d.id, n => uploaded.push(n))),
     a ? null : h('label', { style: { display: 'inline-flex', gap: '6px', alignItems: 'center', cursor: 'pointer' } }, h('input', { type: 'checkbox', onchange: e => { asModel = e.target.checked; } }), '⭐ Enregistrer comme modèle de tâche (réutilisable dans la liste « Tâche type »)'),
-    h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '8px' }, onclick: () => phasesModal(P) }, '🗂️ Gérer les phases et les modèles')],
+    h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '8px' }, onclick: () => phasesModal(P) }, '🗂️ Gérer les phases et les modèles'), ' ',
+    h('button', { class: 'btn sm sec', type: 'button', style: { marginTop: '8px' }, onclick: () => spModal(P) }, '🎨 Gérer les sous-projets')],
     close => [h('button', { class: 'btn sec', onclick: () => { if (!a && uploaded.length) apiFetch('/api/immo/files?aid=' + encodeURIComponent(d.id), { method: 'DELETE' }); setFileCount(d.id, a ? S.immoFiles[d.id] : 0); close(); } }, 'Annuler'), h('button', { class: 'btn', onclick: () => {
       if (!d.label.trim()) return toast('⚠️ Saisissez le libellé de l’action');
       d.deps = d.deps.filter(x => x.id && x.id !== d.id);
